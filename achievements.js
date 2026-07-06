@@ -1,38 +1,13 @@
 import fs from 'fs'
 import path from 'path'
 import { writeJSON, fetchJSON, fetchJSONfromURL, saveImageFromURL } from './utils.js'
-import { STEAM_API_KEY, STEAM_USER_ID, OUTPUT_FOLDER } from './secret.js'
-
-// Games whose achievements to exclude from the site
-const EXCLUDED_GAMES = [
-    "spelunky",
-    "battleblock_theater",
-    "tabletop_simulator",
-    "enter_the_gungeon",
-    "starbound_unstable",
-    "ori_and_the_blind_forest_definitive_edition",
-    "the_jackbox_party_pack_3",
-    "the_jackbox_party_pack_5",
-    "the_jackbox_party_pack_6",
-    "the_jackbox_party_pack_7",
-    "the_jackbox_party_pack_8",
-    "among_us",
-    "bloons_td_6",
-    "if_found",
-    "sea_of_thieves",
-    "dokapon_kingdom_connect",
-    "warframe",
-    "dungeon_defenders_ii"
-]
-
-// App ID of games that aren't included in the owned games list (eg. not owned for some reason)
-const MANUAL_INCLUDE_GAMES = [
-    420530, // OneShot
-]
+import { MANUAL_INCLUDE_IDS, EXCLUDE_IDS, OUTPUT_FOLDER } from './config.js'
 
 /** Returns whether or not the Steam profile is public. */
-async function isProfilePublic() {
-    const res = await fetchJSONfromURL(`http://api.steampowered.com/ISteamUserStats/GetPlayerAchievements/v0001/?appid=400&key=${STEAM_API_KEY}&steamid=${STEAM_USER_ID}`);
+async function isProfilePublic(userId) {
+    const apiKey = process.env.STEAM_API_KEY
+
+    const res = await fetchJSONfromURL(`http://api.steampowered.com/ISteamUserStats/GetPlayerAchievements/v0001/?appid=400&key=${apiKey}&steamid=${userId}`);
     return res.playerstats.error !== "Profile is not public";
 }
 
@@ -40,17 +15,20 @@ async function isProfilePublic() {
  * Gets user data and writes JSON files
  * Only works if profile and game details are set to public.
  */
-async function getUserData() {
+async function getUserData(userId) {
+    const apiKey = process.env.STEAM_API_KEY
+
     // Get owned games
-    const ownedGames = await fetchJSONfromURL(`http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=${STEAM_API_KEY}&steamid=${STEAM_USER_ID}&format=json&include_played_free_games=true`)
+    const ownedGames = await fetchJSONfromURL(`http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=${apiKey}&steamid=${userId}&format=json&include_played_free_games=true`)
 
     // Create query from owned games and manual include games
     let appIds = ownedGames.response.games.map((game) => game.appid)
-    appIds = [...appIds, ...MANUAL_INCLUDE_GAMES];
+    appIds = [...appIds, ...MANUAL_INCLUDE_IDS];
+    appIds = appIds.filter((appId) => !EXCLUDE_IDS.includes(appId))
     const query = appIds.map((appId, i) => `appids[${i}]=${appId}`).join("&")
 
     // Get achievement schemas
-    const schemas = await fetchJSONfromURL(`https://api.steampowered.com/IPlayerService/GetTopAchievementsForGames/v1/?key=${STEAM_API_KEY}&steamid=${STEAM_USER_ID}&language=en&max_achievements=10000&${query}`);
+    const schemas = await fetchJSONfromURL(`https://api.steampowered.com/IPlayerService/GetTopAchievementsForGames/v1/?key=${apiKey}&steamid=${userId}&language=en&max_achievements=10000&${query}`);
 
     // Get unlock times
     const promises = [];
@@ -58,27 +36,40 @@ async function getUserData() {
     schemas.response.games.forEach((game) => {
         if (!game.achievements) return;
         
-        const promise = fetchJSONfromURL(`http://api.steampowered.com/ISteamUserStats/GetPlayerAchievements/v0001/?appid=${game.appid}&key=${STEAM_API_KEY}&steamid=${STEAM_USER_ID}`);
+        const promise = fetchJSONfromURL(`http://api.steampowered.com/ISteamUserStats/GetPlayerAchievements/v0001/?appid=${game.appid}&key=${apiKey}&steamid=${userId}`);
 
         promise.then((data) => {
             unlockTimes[game.appid] = data;
         })
         promises.push(promise);
     });
-    await Promise.all(promises);
 
+    await Promise.all(promises);
     return {schemas: schemas, unlockTimes: unlockTimes}
 }
 
 async function main() {
-    const isPublic = await isProfilePublic();
+    // Load .env
+    process.loadEnvFile(".env");
+    if (!process.env.STEAM_API_KEY) {
+        console.error("\x1b[31mSteam API key not set.\x1b[0m")
+        return;
+    }
+    if (!process.env.STEAM_USER_ID) {
+        console.error("\x1b[31mSteam User ID not set.\x1b[0m")
+        return;
+    }
+    const userId = process.env.STEAM_USER_ID;
+
+    // Check if profile is public
+    const isPublic = await isProfilePublic(userId);
     if (!isPublic) {
-        console.log("\x1b[31mProfile is private. Aborting...\x1b[0m");
+        console.error("\x1b[31mProfile is private. Aborting...\x1b[0m");
         return;
     }
 
-    const userData = await getUserData();
-
+    // Fetch user data
+    const userData = await getUserData(userId);
     const unlockTimes = userData.unlockTimes;
     const schemas = userData.schemas;
     const gameDict = {};
@@ -87,7 +78,6 @@ async function main() {
     Object.entries(unlockTimes).forEach((entry) => {
         if (entry[1].playerstats.error) return;
         const gameKey = entry[1].playerstats.gameName.replace(/[^A-Z0-9]+/ig, "_").toLowerCase();
-        if (EXCLUDED_GAMES.includes(gameKey)) return;
         gameDict[entry[0]] = { key: gameKey, title: entry[1].playerstats.gameName};
     });
 
