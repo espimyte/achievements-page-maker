@@ -84,6 +84,10 @@
 				background: rgba(0, 0, 0, 0.5);
 				backdrop-filter: blur(2px);
 			}
+			#achievements:empty:before {
+				content: "Nothing here!";
+				color: white;
+			}
 
 			/* Individual achievement styling */
 			.ach {
@@ -135,11 +139,6 @@
 			}
 			.invalid {
 				display: none;
-			}
-
-			/* Game specific styling */
-			.pronoun_palace > img {
-				image-rendering: pixelated;
 			}
 
 			/* Footer */
@@ -214,8 +213,8 @@
 					<span>Last updated <span id="last_updated"></span></span>
 					<span class="divider">♦</span>
 					<span
-						>Viewing <span id="ach_count"></span> of
-						<span id="ach_total"></span> achievements</span
+						>Viewing <span id="ach_count">0</span> of
+						<span id="ach_total">0</span> achievements</span
 					>
 				</p>
 			</div>
@@ -238,8 +237,10 @@
 			}
 
 			// Populate
-			async function waitForShowcaseData() {
+			async function waitForAchData() {
 				const res = await fetch("/output/achievements.json");
+				if (!res.ok) return undefined;
+
 				const data = await res.json();
 
 				// Sort achievements
@@ -251,11 +252,12 @@
 				return data;
 			}
 
-			let showcaseDataPromise = this.waitForShowcaseData();
+			let achDataPromise = this.waitForAchData();
 			const initialLoadCount = 300;
 			const loadIncrement = 200;
 			let count = 0;
-			showcaseDataPromise.then((data) => {
+			achDataPromise.then((data) => {
+				if (!data) return;
 				const lastUpdated = document.getElementById("last_updated");
 				const achCount = document.getElementById("ach_count");
 
