@@ -61,10 +61,13 @@ async function main() {
     }
     const userId = process.env.STEAM_USER_ID;
 
+    let userDataStartTime = new Date();
+    process.stdout.write("\x1b[33mFetching user data...\x1b[0m");
+
     // Check if profile is public
     const isPublic = await isProfilePublic(userId);
     if (!isPublic) {
-        console.error("\x1b[31mProfile is private. Aborting...\x1b[0m");
+        console.error("\x1b[31m\nProfile is private. Aborting...\x1b[0m");
         return;
     }
 
@@ -74,27 +77,13 @@ async function main() {
     const schemas = userData.schemas;
     const gameDict = {};
 
+    process.stdout.write(`\r\x1b[33mFetched user data. (${(new Date() - userDataStartTime) / 1000}s)\x1b[0m\n`)
+
     // Create keys using game names
     Object.entries(unlockTimes).forEach((entry) => {
         if (entry[1].playerstats.error) return;
         const gameKey = entry[1].playerstats.gameName.replace(/[^A-Z0-9]+/ig, "_").toLowerCase();
         gameDict[entry[0]] = { key: gameKey, title: entry[1].playerstats.gameName};
-    });
-
-    // Save achievement icons of achieved achievements from schemas
-    Object.values(schemas.response.games).forEach((data) => {
-        data.achievements?.forEach((ach) => {
-            if (!gameDict[data.appid]) return;
-
-            const imageUrl = `http://shared.fastly.steamstatic.com/community_assets/images/apps/${data.appid}/${ach.icon}`
-
-            const file = `${OUTPUT_FOLDER}/icons/${gameDict[data.appid].key}/${ach.icon}`;
-            if (fs.existsSync(file)) return;
-            if (!fs.existsSync(path.dirname(file))) {
-                fs.mkdirSync(path.dirname(file), {recursive: true})
-            }
-            saveImageFromURL(file, imageUrl);
-        })
     });
 
     // Populate games in achievements.json
@@ -144,8 +133,32 @@ async function main() {
 
     // Last updated
     json.last_updated = Date.now();
-    
     writeJSON(`${OUTPUT_FOLDER}/achievements.json`, json);
+
+    // Save achievement icons of achieved achievements from schemas
+    let saveIconStartTime = new Date();
+    process.stdout.write("\x1b[33mSaving icons...\x1b[0m");
+    let savedIconsCount = 0;
+    let alreadyExistsCount = 0;
+    Object.values(schemas.response.games).forEach((data) => {
+        data.achievements?.forEach((ach) => {
+            if (!gameDict[data.appid]) return;
+
+            const imageUrl = `http://shared.fastly.steamstatic.com/community_assets/images/apps/${data.appid}/${ach.icon}`
+
+            const file = `${OUTPUT_FOLDER}/icons/${gameDict[data.appid].key}/${ach.icon}`;
+            if (fs.existsSync(file)) {
+                alreadyExistsCount++;
+                return;
+            }
+            if (!fs.existsSync(path.dirname(file))) {
+                fs.mkdirSync(path.dirname(file), {recursive: true})
+            }
+            saveImageFromURL(file, imageUrl);
+            savedIconsCount++;
+        })
+    });
+    process.stdout.write(`\r\x1b[33mSaved ${savedIconsCount} icons, ${alreadyExistsCount} already exists. \x1b[0m(${(new Date() - saveIconStartTime) / 1000}s)\n`)
 }
 
 main()
