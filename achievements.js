@@ -67,7 +67,7 @@ async function main() {
 
     // Load .env
     try {
-        process.loadEnvFile(".env");
+        process.loadEnvFile(`${dirname}/.env`);
     } catch (e) {
         if (e.code !== 'ENOENT') console.log(`\x1b[31m${e.name}\x1b[0m : ${e.message}`);
         console.log("\x1b[31mUnable to find .env file.\x1b[0m")
