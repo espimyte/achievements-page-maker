@@ -1,4 +1,5 @@
-export const OUTPUT_FOLDER = "output" // Folder where achievement data and icons are saved
+export const OUTPUT_FOLDER = "example" // Folder where achievement data and icons are saved
+export const FETCH_MODE = "include"
 
 /* App IDs of games to exclude */
 export const EXCLUDE_IDS = [
@@ -21,7 +22,9 @@ export const EXCLUDE_IDS = [
 	236110, // Dungeon Defenders II
 ]
 
-/* App IDs of games that aren't included in the owned games list by default (usually a special case) */
-export const MANUAL_INCLUDE_IDS = [
-	420530, // OneShot
+/* App IDs of games to include */
+export const INCLUDE_IDS = [
+	1030300, // Silksong
+	250900, // The Binding of Isaac: Rebirth
+	333640, // Caves of Qud
 ]

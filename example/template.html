@@ -37,7 +37,7 @@
 			}
 
 			body {
-				background: url("/template-bg.png");
+				background: url("bg.png");
 				background-size: 64px;
 				image-rendering: pixelated;
 				overflow-y: scroll;
@@ -201,13 +201,13 @@
 			}
 		</style>
 	</head>
-	<body class="rm-pause">
+	<body>
 		<div id="main">
 			<h1 id="header">ACHIEVEMENTS</h1>
 			<div id="achievements_wrapper">
 				<div id="achievements"></div>
 			</div>
-			<button id="load_more">Load More</button>
+			<button id="load_more" disabled>Load More</button>
 			<div id="footer">
 				<p id="extra_data">
 					<span>Last updated <span id="last_updated"></span></span>
@@ -238,7 +238,7 @@
 
 			// Populate
 			async function waitForAchData() {
-				const res = await fetch("/output/achievements.json");
+				const res = await fetch("achievements.json");
 				if (!res.ok) return undefined;
 
 				const data = await res.json();
@@ -255,6 +255,7 @@
 			let achDataPromise = this.waitForAchData();
 			const initialLoadCount = 300;
 			const loadIncrement = 200;
+
 			let count = 0;
 			achDataPromise.then((data) => {
 				if (!data) return;
@@ -276,6 +277,9 @@
 						const achEl = document.createElement("div");
 						achEl.className = `ach ${ach.game}`;
 						achEl.id = `ach_${i}`;
+
+						const gameData = data.games[ach.game];
+						if (!gameData) continue;
 						const gameTitle = data.games[ach.game].title;
 
 						const hasInvalidDate = !ach.timestamp || ach.timestamp == 0;
@@ -285,7 +289,7 @@
 						).toLocaleDateString("en-US");
 
 						achEl.innerHTML = `
-							<img class="ach-img" src="${ach.img}" loading="lazy" />
+							<img class="ach-img" src="/${ach.img}" loading="lazy" />
 							<div class="ach-tooltip">
 								<div style="display: flex; gap: 5px">
 									<span class="ach-game">[${gameTitle}]</span><span class="ach-title">${ach.title}</span>
@@ -325,6 +329,9 @@
 
 				// Load more
 				const loadMoreButton = document.getElementById("load_more");
+				if (count < data.achievements.length) {
+					loadMoreButton.disabled = false;
+				}
 				loadMoreButton.onclick = (e) => {
 					loadAchievements(count, count + loadIncrement);
 					if (count >= data.achievements.length) {

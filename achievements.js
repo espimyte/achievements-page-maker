@@ -1,9 +1,15 @@
 import fs from 'fs'
+import http from 'http';
+import stream from 'node:stream';
 import path from 'path'
-import { writeJSON, fetchJSON, fetchJSONfromURL, saveImageFromURL } from './utils.js'
-import { MANUAL_INCLUDE_IDS, EXCLUDE_IDS, OUTPUT_FOLDER } from './config.js'
+import { fetchJSON, writeJSON, saveImageFromURL, fetchJSONfromURL } from './utils.js'
+import { FETCH_MODE, INCLUDE_IDS, EXCLUDE_IDS, OUTPUT_FOLDER } from './config.js'
 
-/** Returns whether or not the Steam profile is public. */
+/** 
+ * Returns whether or not the Steam profile is public
+ * @param userId Steam User Id to check 
+ * @returns whether or not the associated profile is public
+ */
 async function isProfilePublic(userId) {
     const apiKey = process.env.STEAM_API_KEY
 
@@ -14,17 +20,24 @@ async function isProfilePublic(userId) {
 /**
  * Gets user data and writes JSON files
  * Only works if profile and game details are set to public.
+ * @param userId Steam User Id to fetch data from
+ * @returns achievement schemas and unlock times in JSON format
  */
 async function getUserData(userId) {
     const apiKey = process.env.STEAM_API_KEY
 
-    // Get owned games
-    const ownedGames = await fetchJSONfromURL(`http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=${apiKey}&steamid=${userId}&format=json&include_played_free_games=true`)
+    let appIds = []
+    if (FETCH_MODE === "include") {
+        appIds = [...INCLUDE_IDS]
+    } else {
+        // Get owned games
+        const ownedGames = await fetchJSONfromURL(`http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=${apiKey}&steamid=${userId}&format=json&include_played_free_games=true`)
 
-    // Create query from owned games and manual include games
-    let appIds = ownedGames.response.games.map((game) => game.appid)
-    appIds = [...appIds, ...MANUAL_INCLUDE_IDS];
-    appIds = appIds.filter((appId) => !EXCLUDE_IDS.includes(appId))
+        appIds = ownedGames.response.games.map((game) => game.appid)
+        appIds = Array.from(new Set([...appIds, ...INCLUDE_IDS]));
+        appIds = appIds.filter((appId) => !EXCLUDE_IDS.includes(appId))
+    }
+
     const query = appIds.map((appId, i) => `appids[${i}]=${appId}`).join("&")
 
     // Get achievement schemas
@@ -77,7 +90,7 @@ async function main() {
     const schemas = userData.schemas;
     const gameDict = {};
 
-    process.stdout.write(`\r\x1b[33mFetched user data. (${(new Date() - userDataStartTime) / 1000}s)\x1b[0m\n`)
+    process.stdout.write(`\r\x1b[33mFetched user data. \x1b[0m(${(new Date() - userDataStartTime) / 1000}s)\x1b[0m\n`)
 
     // Create keys using game names
     Object.entries(unlockTimes).forEach((entry) => {
