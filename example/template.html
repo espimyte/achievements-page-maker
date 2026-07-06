@@ -25,7 +25,7 @@
 					rgb(0, 118, 139),
 					rgb(0, 46, 38)
 				);
-				--ach-primary: rgb(153, 187, 240);
+				--ach-primary: rgb(176, 204, 250);
 				--ach-secondary: rgb(146, 184, 255);
 				--ach-tertiary: rgb(67, 83, 172);
 				--ach-alt-primary: rgb(112, 241, 198);
@@ -34,6 +34,12 @@
 
 			* {
 				scrollbar-color: rgb(0, 69, 82) rgb(0, 0, 0);
+			}
+			a {
+				color: var(--ach-alt-primary);
+			}
+			a:hover {
+				color: white;
 			}
 
 			body {
@@ -145,14 +151,26 @@
 			#footer {
 				color: var(--ach-primary);
 				border-top: 2px solid rgb(67, 83, 172);
-				padding-top: 5px;
-				padding-bottom: 5px;
+				padding: 5px 10px;
 				background: var(--ach-gradient-light);
 				backdrop-filter: blur(2px);
+				display: flex;
+				justify-content: center;
 			}
-			#extra_data {
-				width: fit-content;
-				margin: auto;
+			#footer p {
+				margin: 0;
+			}
+			#footer :first-child {
+				flex: 1;
+			}
+			#footer :last-child {
+				flex: 1;
+				text-align: right;
+			}
+			#last_updated,
+			#ach_count,
+			#ach_total {
+				color: var(--ach-secondary);
 			}
 
 			/* Load more */
@@ -193,11 +211,6 @@
 				#footer .divider {
 					display: none;
 				}
-				#extra_data {
-					display: flex;
-					flex-direction: column;
-					gap: 4px;
-				}
 			}
 		</style>
 	</head>
@@ -209,14 +222,12 @@
 			</div>
 			<button id="load_more" disabled>Load More</button>
 			<div id="footer">
-				<p id="extra_data">
-					<span>Last updated <span id="last_updated"></span></span>
-					<span class="divider">♦</span>
-					<span
-						>Viewing <span id="ach_count">0</span> of
-						<span id="ach_total">0</span> achievements</span
-					>
+				<p>Last updated <span id="last_updated"></span></p>
+				<p>
+					Viewing <span id="ach_count">0</span> of <span id="ach_total">0</span>
+					achievements
 				</p>
+				<p>Made with <a href="">Espy's Achievement Collector</a></p>
 			</div>
 		</div>
 		<script>
