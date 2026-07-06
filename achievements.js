@@ -2,8 +2,9 @@ import fs from 'fs'
 import http from 'http';
 import stream from 'node:stream';
 import path from 'path'
+import { fileURLToPath } from 'url';
 import { fetchJSON, writeJSON, saveImageFromURL, fetchJSONfromURL } from './utils.js'
-import { FETCH_MODE, INCLUDE_IDS, EXCLUDE_IDS, OUTPUT_FOLDER } from './config.js'
+import { HTML_PATH, FETCH_MODE, INCLUDE_IDS, EXCLUDE_IDS, ICONS_OUTPUT_FOLDER, JSON_OUTPUT_PATH } from './config.js'
 
 /** 
  * Returns whether or not the Steam profile is public
@@ -62,8 +63,17 @@ async function getUserData(userId) {
 }
 
 async function main() {
+    const dirname = path.dirname(fileURLToPath(import.meta.url))
+
     // Load .env
-    process.loadEnvFile(".env");
+    try {
+        process.loadEnvFile(".env");
+    } catch (e) {
+        if (e.code !== 'ENOENT') console.log(`\x1b[31m${e.name}\x1b[0m : ${e.message}`);
+        console.log("\x1b[31mUnable to find .env file.\x1b[0m")
+        return;
+    }
+    
     if (!process.env.STEAM_API_KEY) {
         console.error("\x1b[31mSteam API key not set.\x1b[0m")
         return;
@@ -100,7 +110,7 @@ async function main() {
     });
 
     // Populate games in achievements.json
-    let json = fetchJSON(`${OUTPUT_FOLDER}/achievements.json`);
+    let json = fetchJSON(`${JSON_OUTPUT_PATH}`);
     if (!json) json = {"games": {}, "achievements": []}
     Object.values(gameDict).forEach((game) => {
         if (!json.games[game.key]) {
@@ -138,7 +148,7 @@ async function main() {
             achEntry.timestamp = ach.unlockTime;
             achEntry.title = ach.name;
             achEntry.desc = ach.desc;
-            achEntry.img = `${OUTPUT_FOLDER}/icons/${gameKey}/${ach.icon}`;
+            achEntry.img = path.relative(HTML_PATH, `${ICONS_OUTPUT_FOLDER}/${gameKey}/${ach.icon}`);
             achEntry.src = 'steam';
             json.achievements.push(achEntry);
         })
@@ -146,7 +156,7 @@ async function main() {
 
     // Last updated
     json.last_updated = Date.now();
-    writeJSON(`${OUTPUT_FOLDER}/achievements.json`, json);
+    writeJSON(`${JSON_OUTPUT_PATH}`, json);
 
     // Save achievement icons of achieved achievements from schemas
     let saveIconStartTime = new Date();
@@ -159,7 +169,7 @@ async function main() {
 
             const imageUrl = `http://shared.fastly.steamstatic.com/community_assets/images/apps/${data.appid}/${ach.icon}`
 
-            const file = `${OUTPUT_FOLDER}/icons/${gameDict[data.appid].key}/${ach.icon}`;
+            const file = `${ICONS_OUTPUT_FOLDER}/${gameDict[data.appid].key}/${ach.icon}`;
             if (fs.existsSync(file)) {
                 alreadyExistsCount++;
                 return;

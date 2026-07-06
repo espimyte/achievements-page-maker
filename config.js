@@ -1,5 +1,6 @@
-/* Folder where achievement data and icons are saved */
-export const OUTPUT_FOLDER = "example" // 
+export const ICONS_OUTPUT_FOLDER = "example/icons" // Folder where achievement icons are saved
+export const JSON_OUTPUT_PATH = "example/achievements.json" // Where achievement data is saved
+export const HTML_PATH = "example/template.html" // Used so image file paths in JSON are relative to HTML page if you are using one
 
 /**
  * "exclude" - default behavior, gets all owned games on your steam account and excludes anything in 'EXCLUDE_IDS'
