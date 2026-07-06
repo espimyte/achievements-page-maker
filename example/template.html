@@ -23,7 +23,7 @@
 				--ach-gradient-alt: linear-gradient(
 					to bottom,
 					rgb(0, 118, 139),
-					rgb(0, 46, 38)
+					rgb(0, 99, 82)
 				);
 				--ach-primary: rgb(176, 204, 250);
 				--ach-secondary: rgb(146, 184, 255);
@@ -44,7 +44,8 @@
 
 			body {
 				background: url("bg.png");
-				background-size: 64px;
+				background-position: center;
+				background-attachment: fixed;
 				image-rendering: pixelated;
 				overflow-y: scroll;
 				margin: 0;
@@ -180,7 +181,7 @@
 				background: var(--ach-gradient-alt);
 				color: var(--ach-alt-primary);
 				border-radius: 5px;
-				border: 1px solid rgb(6, 136, 153);
+				border: 1px solid var(--ach-primary);
 				text-transform: uppercase;
 				padding: 5px 5px;
 				backdrop-filter: blur(2px);
