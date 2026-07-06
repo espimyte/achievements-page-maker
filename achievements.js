@@ -38,26 +38,24 @@ async function isProfilePublic() {
 
 /**
  * Gets user data and writes JSON files
- * NOTE: Make sure to set profile to public and game details to public before running this.
+ * Only works if profile and game details are set to public.
  */
 async function getUserData() {
-    // Get owned games and save that json file
+    // Get owned games
     const ownedGames = await fetchJSONfromURL(`http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=${STEAM_API_KEY}&steamid=${STEAM_USER_ID}&format=json&include_played_free_games=true`)
-    writeJSON(`${OUTPUT_FOLDER}/ownedgames.json`, ownedGames, true);
 
     // Create query from owned games and manual include games
     let appIds = ownedGames.response.games.map((game) => game.appid)
     appIds = [...appIds, ...MANUAL_INCLUDE_GAMES];
     const query = appIds.map((appId, i) => `appids[${i}]=${appId}`).join("&")
 
-    // Get achievements schemas and save that json file
-    const achievements = await fetchJSONfromURL(`https://api.steampowered.com/IPlayerService/GetTopAchievementsForGames/v1/?key=${STEAM_API_KEY}&steamid=${STEAM_USER_ID}&language=en&max_achievements=10000&${query}`);
-    writeJSON(`${OUTPUT_FOLDER}/schemas.json`, achievements, true)
+    // Get achievement schemas
+    const schemas = await fetchJSONfromURL(`https://api.steampowered.com/IPlayerService/GetTopAchievementsForGames/v1/?key=${STEAM_API_KEY}&steamid=${STEAM_USER_ID}&language=en&max_achievements=10000&${query}`);
 
     // Get unlock times
     const promises = [];
     const unlockTimes = {};
-    achievements.response.games.forEach((game) => {
+    schemas.response.games.forEach((game) => {
         if (!game.achievements) return;
         
         const promise = fetchJSONfromURL(`http://api.steampowered.com/ISteamUserStats/GetPlayerAchievements/v0001/?appid=${game.appid}&key=${STEAM_API_KEY}&steamid=${STEAM_USER_ID}`);
@@ -67,13 +65,9 @@ async function getUserData() {
         })
         promises.push(promise);
     });
+    await Promise.all(promises);
 
-    const unlockTimesPromise = Promise.all(promises);
-    unlockTimesPromise.then(() => {
-        writeJSON(`${OUTPUT_FOLDER}/unlocktimes.json`, unlockTimes, true);
-    })
-
-    return unlockTimesPromise;
+    return {schemas: schemas, unlockTimes: unlockTimes}
 }
 
 async function main() {
@@ -83,10 +77,10 @@ async function main() {
         return;
     }
 
-    const userDataPromise = await getUserData();
+    const userData = await getUserData();
 
-    const unlockTimes = fetchJSON(`${OUTPUT_FOLDER}/unlocktimes.json`);
-    const schemas = fetchJSON(`${OUTPUT_FOLDER}/schemas.json`);
+    const unlockTimes = userData.unlockTimes;
+    const schemas = userData.schemas;
     const gameDict = {};
 
     // Create keys using game names
