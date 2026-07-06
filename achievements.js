@@ -4,7 +4,7 @@ import stream from 'node:stream';
 import path from 'path'
 import { fileURLToPath } from 'url';
 import { fetchJSON, writeJSON, saveImageFromURL, fetchJSONfromURL } from './utils.js'
-import { HTML_PATH, FETCH_MODE, INCLUDE_IDS, EXCLUDE_IDS, ICONS_OUTPUT_FOLDER, JSON_OUTPUT_PATH } from './config.js'
+import { RELATIVE_IMAGE_PATH, FETCH_MODE, INCLUDE_IDS, EXCLUDE_IDS, ICONS_OUTPUT_FOLDER, JSON_OUTPUT_PATH } from './config.js'
 
 /** 
  * Returns whether or not the Steam profile is public
@@ -148,7 +148,7 @@ async function main() {
             achEntry.timestamp = ach.unlockTime;
             achEntry.title = ach.name;
             achEntry.desc = ach.desc;
-            achEntry.img = path.relative(HTML_PATH, `${ICONS_OUTPUT_FOLDER}/${gameKey}/${ach.icon}`);
+            achEntry.img = path.relative(RELATIVE_IMAGE_PATH, `${ICONS_OUTPUT_FOLDER}/${gameKey}/${ach.icon}`);
             achEntry.src = 'steam';
             json.achievements.push(achEntry);
         })
