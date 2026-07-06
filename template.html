@@ -1,0 +1,466 @@
+<!doctype html>
+
+<html lang="en">
+	<head>
+		<meta
+			content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=contain"
+			name="viewport"
+		/>
+		<meta charset="utf-8" />
+		<title>Achievements</title>
+		<style>
+			:root {
+				--ach-gradient-dark: linear-gradient(
+					to bottom,
+					rgba(0, 65, 139, 0.8),
+					rgb(0, 0, 0)
+				);
+				--ach-gradient-light: linear-gradient(
+					to bottom,
+					rgb(0, 13, 41),
+					rgba(0, 19, 44, 0.9)
+				);
+				--ach-gradient-alt: linear-gradient(
+					to bottom,
+					rgb(0, 118, 139),
+					rgb(0, 46, 38)
+				);
+				--ach-primary: rgb(153, 187, 240);
+				--ach-secondary: rgb(146, 184, 255);
+				--ach-tertiary: rgb(67, 83, 172);
+				--ach-alt-primary: rgb(112, 241, 198);
+				--ach-alt-secondary: rgb(93, 212, 216);
+			}
+
+			* {
+				scrollbar-color: rgb(0, 69, 82) rgb(0, 0, 0);
+			}
+
+			body {
+				background: url("/template-bg.png");
+				background-size: 64px;
+				image-rendering: pixelated;
+				overflow-y: scroll;
+				margin: 0;
+				font-family: monospace;
+			}
+			#main {
+				min-height: 100dvh;
+				overflow-x: hidden;
+				display: flex;
+				flex-direction: column;
+				gap: 20px;
+			}
+
+			/* Header */
+			#header {
+				color: var(--ach-alt-primary);
+				background: var(--ach-gradient-light);
+				width: fit-content;
+				margin: 20px auto;
+				margin-bottom: 0px;
+				padding: 10px;
+				border: 1px solid var(--ach-tertiary);
+				letter-spacing: 2px;
+				font-size: 2.6em;
+			}
+
+			/* Achievements styling */
+			#achievements_wrapper {
+				flex-grow: 1;
+				margin: auto;
+				display: flex;
+				align-items: center;
+			}
+			#achievements {
+				display: flex;
+				flex-wrap: wrap;
+				justify-content: flex-start;
+				gap: 0px;
+				margin: 0px auto;
+				border: 15px solid rgb(0, 0, 0);
+				height: fit-content;
+				max-width: calc(64px * 29);
+				background: rgba(0, 0, 0, 0.5);
+				backdrop-filter: blur(2px);
+			}
+
+			/* Individual achievement styling */
+			.ach {
+				position: relative;
+				width: 64px;
+				height: 64px;
+			}
+			.ach-img {
+				position: relative;
+				image-rendering: auto;
+				width: 64px;
+				height: 64px;
+				transition: transform 1s;
+				box-sizing: border-box;
+			}
+			.ach-game {
+				color: var(--ach-primary);
+			}
+			.ach-title {
+				font-weight: bold;
+				color: var(--ach-alt-primary);
+			}
+			.ach-date {
+				color: var(--ach-secondary);
+			}
+			.ach-desc {
+				color: var(--ach-alt-secondary);
+			}
+			.ach-date .ach-desc {
+				text-align: left;
+			}
+			.ach-tooltip {
+				position: absolute;
+				background: var(--ach-gradient-light);
+				border: 1px solid var(--ach-tertiary);
+				padding: 4px;
+				top: -55px;
+				left: 50%;
+				transform: translateX(-50%);
+				white-space: nowrap;
+				z-index: 10;
+				display: flex;
+				flex-direction: column;
+				visibility: hidden;
+				gap: 3px;
+				color: rgb(212, 212, 212);
+				box-sizing: content-box;
+				text-align: left;
+			}
+			.invalid {
+				display: none;
+			}
+
+			/* Game specific styling */
+			.pronoun_palace > img {
+				image-rendering: pixelated;
+			}
+
+			/* Footer */
+			#footer {
+				color: var(--ach-primary);
+				border-top: 2px solid rgb(67, 83, 172);
+				padding-top: 5px;
+				padding-bottom: 5px;
+				background: var(--ach-gradient-light);
+				backdrop-filter: blur(2px);
+			}
+			#extra_data {
+				width: fit-content;
+				margin: auto;
+			}
+
+			/* Load more */
+			#load_more {
+				width: 200px;
+				margin: 0px auto;
+				background: var(--ach-gradient-alt);
+				color: var(--ach-alt-primary);
+				border-radius: 5px;
+				border: 1px solid rgb(6, 136, 153);
+				text-transform: uppercase;
+				padding: 5px 5px;
+				backdrop-filter: blur(2px);
+			}
+			#load_more:disabled {
+				display: none;
+			}
+			#load_more:hover {
+				box-shadow: 0px 0px 5px var(--ach-alt-primary);
+				color: white;
+				background: rgb(15, 138, 138);
+				border-color: white;
+				cursor: pointer;
+			}
+			#more_indicator {
+				width: 64px;
+				height: 64px;
+				background: var(--ach-gradient-dark);
+				border: 3px double var(--ach-tertiary);
+				box-sizing: border-box;
+				display: flex;
+				justify-content: center;
+				align-items: center;
+				color: var(--ach-secondary);
+			}
+
+			@media screen and (max-width: 600px) {
+				#footer .divider {
+					display: none;
+				}
+				#extra_data {
+					display: flex;
+					flex-direction: column;
+					gap: 4px;
+				}
+			}
+		</style>
+	</head>
+	<body class="rm-pause">
+		<div id="main">
+			<h1 id="header">ACHIEVEMENTS</h1>
+			<div id="achievements_wrapper">
+				<div id="achievements"></div>
+			</div>
+			<button id="load_more">Load More</button>
+			<div id="footer">
+				<p id="extra_data">
+					<span>Last updated <span id="last_updated"></span></span>
+					<span class="divider">♦</span>
+					<span
+						>Viewing <span id="ach_count"></span> of
+						<span id="ach_total"></span> achievements</span
+					>
+				</p>
+			</div>
+		</div>
+		<script>
+			const mainEl = document.getElementById("main");
+			let prevX = 0;
+			let prevY = 0;
+			let pressedAchs = [];
+
+			// Sizing function
+			const achList = document.getElementById(`achievements`);
+			addEventListener("resize", clampSize);
+
+			function clampSize() {
+				const windowWidth = document.body.clientWidth;
+				const borderBuffer = 30;
+				const extraSpace = (windowWidth - borderBuffer) % 64;
+				achList.style.maxWidth = `${windowWidth - extraSpace - borderBuffer}px`;
+			}
+
+			// Populate
+			async function waitForShowcaseData() {
+				const res = await fetch("/output/achievements.json");
+				const data = await res.json();
+
+				// Sort achievements
+				data.achievements.sort((a, b) => {
+					if (!a.timestamp) return true;
+					return b.timestamp > a.timestamp || -(b.timestamp < a.timestamp);
+				});
+
+				return data;
+			}
+
+			let showcaseDataPromise = this.waitForShowcaseData();
+			const initialLoadCount = 300;
+			const loadIncrement = 200;
+			let count = 0;
+			showcaseDataPromise.then((data) => {
+				const lastUpdated = document.getElementById("last_updated");
+				const achCount = document.getElementById("ach_count");
+
+				lastUpdated.textContent = new Date(
+					data.last_updated,
+				).toLocaleDateString("en-US");
+
+				const moreIndicator = document.createElement("div");
+				moreIndicator.id = "more_indicator";
+				achList.appendChild(moreIndicator);
+
+				function loadAchievements(start, end) {
+					end = Math.min(end, data.achievements.length);
+					for (i = start; i < end; i++) {
+						const ach = data.achievements[i];
+						const achEl = document.createElement("div");
+						achEl.className = `ach ${ach.game}`;
+						achEl.id = `ach_${i}`;
+						const gameTitle = data.games[ach.game].title;
+
+						const hasInvalidDate = !ach.timestamp || ach.timestamp == 0;
+						const hasInvalidDesc = ach.desc.includes("NEW_ACHIEVEMENT");
+						const unlockDate = new Date(
+							ach.timestamp * 1000,
+						).toLocaleDateString("en-US");
+
+						achEl.innerHTML = `
+							<img class="ach-img" src="${ach.img}" loading="lazy" />
+							<div class="ach-tooltip">
+								<div style="display: flex; gap: 5px">
+									<span class="ach-game">[${gameTitle}]</span><span class="ach-title">${ach.title}</span>
+									<span
+										class="ach-date"
+										style="flex-grow: 1;
+										text-align: right;">${hasInvalidDate ? "N/A" : unlockDate}</span>
+								</div>
+								<span class="ach-desc ${hasInvalidDesc ? "invalid" : ""}">${ach.desc}</span>
+							</div>
+						`;
+						achList.appendChild(achEl);
+
+						achEl.onclick = (e) => {
+							if (achEl.classList.contains("lifted")) {
+								unselectAll();
+							} else {
+								unselectAll();
+								selectAch(achEl, true);
+							}
+						};
+
+						if (i === end - 1) {
+							achList.appendChild(moreIndicator);
+							moreIndicator.textContent = `+${data.achievements.length - end}`;
+						}
+						if (data.achievements.length - end <= 0) {
+							moreIndicator.remove();
+						}
+					}
+					count += end - start;
+					achCount.textContent = `${end}`;
+				}
+
+				// Initial load
+				loadAchievements(0, initialLoadCount);
+
+				// Load more
+				const loadMoreButton = document.getElementById("load_more");
+				loadMoreButton.onclick = (e) => {
+					loadAchievements(count, count + loadIncrement);
+					if (count >= data.achievements.length) {
+						loadMoreButton.disabled = true;
+					}
+				};
+
+				// Achievement total
+				const achTotal = document.getElementById("ach_total");
+				achTotal.textContent = `${data.achievements.length}`;
+				clampSize();
+			});
+
+			function getPositionAlongTheLine(x1, y1, x2, y2, percentage) {
+				return {
+					x: x1 * (1.0 - percentage) + x2 * percentage,
+					y: y1 * (1.0 - percentage) + y2 * percentage,
+				};
+			}
+
+			function isOffscreen(rect) {
+				return (
+					rect.x + rect.width < 0 ||
+					rect.y + rect.height < 0 ||
+					rect.x > window.innerWidth ||
+					rect.y > window.innerHeight
+				);
+			}
+
+			// Effects
+			window.onpointermove = function (event) {
+				const { clientX, clientY } = event;
+
+				const diffX = Math.abs(prevX - event.clientX);
+				const diffY = Math.abs(prevY - event.clientY);
+				const diff = ((diffX ^ 2) + (diffY ^ 2)) ^ (1 / 2);
+
+				// Steps needed
+				const stepSize = 64;
+				const stepsNeeded = Math.floor(diff / stepSize);
+				const percent = 1 / stepsNeeded;
+
+				const pointsToCheck = [];
+
+				for (let i = 0; i < stepsNeeded; i++) {
+					const pointPos = getPositionAlongTheLine(
+						prevX,
+						prevY,
+						event.clientX,
+						event.clientY,
+						percent * (i + 1),
+					);
+					pointsToCheck.push(pointPos);
+				}
+
+				prevX = event.clientX;
+				prevY = event.clientY;
+
+				const liftedAchs = [...pressedAchs];
+				unselectAll();
+
+				achList.childNodes.forEach((c) => {
+					if (c.id === "more_indicator") return;
+					var rect = c.getBoundingClientRect();
+					const offscreen = isOffscreen(rect);
+					if (offscreen) return;
+
+					pointsToCheck.push({ x: event.clientX, y: event.clientY });
+
+					let lifted = false;
+
+					pointsToCheck.forEach((point) => {
+						if (lifted) return;
+
+						if (isPointInRect(point.x, point.y, rect)) {
+							selectAch(c);
+							lifted = true;
+						}
+					});
+				});
+
+				const lastPressedAch = pressedAchs[pressedAchs.length - 1];
+
+				if (lastPressedAch) {
+					const cTooltip = lastPressedAch.tooltip;
+					showTooltip(cTooltip);
+				}
+			};
+
+			function isPointInRect(x, y, rect) {
+				const inBoxX = x > rect.left && x - rect.left <= 64;
+				const inBoxY = y > rect.top && y - rect.top <= 64;
+				return inBoxX && inBoxY;
+			}
+
+			function selectAch(c, tooltip = false) {
+				c.classList.add("lifted");
+				const cImg = c.getElementsByTagName("img")[0];
+				cImg.style.transform = `translateY(-10px)`;
+				cImg.style.transition = `transform 0s`;
+				cImg.style.boxShadow = `0px 0px 10px white`;
+				cImg.style.zIndex = `10`;
+				const cTooltip = c.getElementsByTagName("div")[0];
+				pressedAchs.push({ id: c.id, parent: c, img: cImg, tooltip: cTooltip });
+
+				if (tooltip) {
+					showTooltip(cTooltip);
+				}
+			}
+
+			function showTooltip(tooltip) {
+				tooltip.style.visibility = "visible";
+				let tooltipRect = tooltip.getBoundingClientRect();
+
+				// Resize tooltip width if too large
+				if (tooltipRect.width > document.body.clientWidth) {
+					tooltip.style.whiteSpace = "unset";
+					tooltip.style.width = `${document.body.clientWidth - 20}px`;
+					tooltipRect = tooltip.getBoundingClientRect();
+				}
+
+				// Align tooltip to be fully on screen
+				if (tooltipRect.right > document.body.clientWidth) {
+					tooltip.style.transform = `translateX(calc(-50% - ${tooltipRect.right - document.body.clientWidth + 5}px))`;
+				} else if (tooltipRect.left < 0) {
+					tooltip.style.transform = `translateX(calc(-50% - ${tooltipRect.left - 5}px))`;
+				}
+			}
+
+			function unselectAll() {
+				pressedAchs.forEach((ach) => {
+					ach.parent.classList.remove("lifted");
+					ach.img.style = ``;
+					ach.img.style.transition = `transform 0.5s`;
+					ach.tooltip.style = "";
+				});
+				pressedAchs = [];
+			}
+		</script>
+	</body>
+</html>
