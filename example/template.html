@@ -138,6 +138,7 @@
 			.ach-group-title {
 				color: white;
 				margin: 20px 20px;
+				text-align: center;
 			}
 			#achievements:empty:before {
 				content: "Nothing here!";
@@ -344,7 +345,7 @@
 				const borderBuffer = 30;
 				const extraSpace = (windowWidth - borderBuffer) % 64;
 				achLists.forEach((achList) => {
-					achList.style.maxWidth = `${windowWidth - extraSpace - borderBuffer}px`;
+					achList.style.maxWidth = `${Math.min(windowWidth - extraSpace - borderBuffer, achList.childElementCount * 64)}px`;
 				});
 			}
 
@@ -407,7 +408,7 @@
 				achTooltip.innerHTML = `
 				<div style="display: flex; gap: 5px">
 					<span class="ach-game">[${gameTitle}]</span><span class="ach-title">${ach.title}</span>
-					<span class="ach-date" style="flex-grow: 1; text-align: right;">
+					<span class="ach-date" style="flex-grow: 1; text-align: right; margin-left: 5px;">
 						${hasInvalidDate ? "N/A" : unlockDate}
 					</span>
 				</div>
@@ -522,8 +523,8 @@
 					gameCount++;
 					achCount.textContent = `${count}`;
 
-					if (count < currentGoal) loadNextGameAchs();
 					clampSize();
+					if (count < currentGoal) loadNextGameAchs();
 					if (count < data.achievements.length) {
 						loadMoreButton.disabled = false;
 					} else loadMoreButton.disabled = true;
