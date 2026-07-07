@@ -10,6 +10,21 @@
 		<meta charset="utf-8" />
 		<title>Achievements</title>
 		<style>
+			@keyframes loading {
+				0% {
+					content: ".";
+				}
+				33% {
+					content: "..";
+				}
+				66% {
+					content: "...";
+				}
+				100% {
+					content: ".";
+				}
+			}
+
 			:root {
 				--ach-gradient-dark: linear-gradient(
 					to bottom,
@@ -136,6 +151,24 @@
 				width: 64px;
 				height: 64px;
 			}
+			.ach:after {
+				content: "...";
+				position: absolute;
+				top: 0%;
+				left: 0%;
+				color: white;
+				z-index: 0;
+				width: 100%;
+				height: 100%;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				border: 1px solid rgba(255, 255, 255, 0.281);
+				box-sizing: border-box;
+				background: rgba(0, 0, 0, 0.2);
+				animation: loading 1s linear infinite;
+			}
+
 			.ach-img {
 				position: relative;
 				image-rendering: auto;
@@ -143,6 +176,7 @@
 				height: 64px;
 				transition: transform 1s;
 				box-sizing: border-box;
+				z-index: 1;
 			}
 			.ach-game {
 				color: var(--ach-primary);
