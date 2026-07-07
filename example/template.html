@@ -151,8 +151,7 @@
 				width: 64px;
 				height: 64px;
 			}
-			.ach:after {
-				content: "...";
+			.ach-loading {
 				position: absolute;
 				top: 0%;
 				left: 0%;
@@ -166,6 +165,9 @@
 				border: 1px solid rgba(255, 255, 255, 0.281);
 				box-sizing: border-box;
 				background: rgba(0, 0, 0, 0.2);
+			}
+			.ach-loading:before {
+				content: "...";
 				animation: loading 1s linear infinite;
 			}
 
@@ -390,19 +392,31 @@
 					"en-US",
 				);
 
-				achEl.innerHTML = `
-					<img class="ach-img" src="${ach.img}" loading="lazy" />
-					<div class="ach-tooltip">
-						<div style="display: flex; gap: 5px">
-							<span class="ach-game">[${gameTitle}]</span><span class="ach-title">${ach.title}</span>
-							<span
-								class="ach-date"
-								style="flex-grow: 1;
-								text-align: right;">${hasInvalidDate ? "N/A" : unlockDate}</span>
-						</div>
-						<span class="ach-desc ${hasInvalidDesc ? "invalid" : ""}">${ach.desc}</span>
-					</div>
-				`;
+				const achLoading = document.createElement("div");
+				achLoading.className = "ach-loading";
+				achEl.appendChild(achLoading);
+
+				const achImg = document.createElement("img");
+				achImg.loading = "lazy";
+				achImg.className = "ach-img";
+				achImg.src = ach.img;
+				achEl.appendChild(achImg);
+
+				const achTooltip = document.createElement("div");
+				achTooltip.className = "ach-tooltip";
+				achTooltip.innerHTML = `
+				<div style="display: flex; gap: 5px">
+					<span class="ach-game">[${gameTitle}]</span><span class="ach-title">${ach.title}</span>
+					<span class="ach-date" style="flex-grow: 1; text-align: right;">
+						${hasInvalidDate ? "N/A" : unlockDate}
+					</span>
+				</div>
+				<span class="ach-desc ${hasInvalidDesc ? "invalid" : ""}">${ach.desc}</span>`;
+				achEl.appendChild(achTooltip);
+
+				achImg.onload = () => {
+					achLoading.remove();
+				};
 
 				achEl.onclick = (e) => {
 					if (achEl.classList.contains("lifted")) {
@@ -646,16 +660,15 @@
 			function selectAch(c, tooltip = false) {
 				c.classList.add("lifted");
 				const cImg = c.getElementsByTagName("img")[0];
-				cImg.style.transform = `translateY(-10px)`;
-				cImg.style.transition = `transform 0s`;
-				cImg.style.boxShadow = `0px 0px 10px white`;
-				cImg.style.zIndex = `10`;
+				if (cImg.complete) {
+					cImg.style.transform = `translateY(-10px)`;
+					cImg.style.transition = `transform 0s`;
+					cImg.style.boxShadow = `0px 0px 10px white`;
+					cImg.style.zIndex = `10`;
+				}
 				const cTooltip = c.getElementsByTagName("div")[0];
 				pressedAchs.push({ id: c.id, parent: c, img: cImg, tooltip: cTooltip });
-
-				if (tooltip) {
-					showTooltip(cTooltip);
-				}
+				if (tooltip) showTooltip(cTooltip);
 			}
 
 			function showTooltip(tooltip) {
