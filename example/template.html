@@ -98,6 +98,7 @@
 				margin: auto;
 				display: flex;
 				align-items: center;
+				justify-content: center;
 				flex-direction: column;
 				gap: 5px;
 			}
@@ -116,6 +117,7 @@
 			#achievements:empty:before {
 				content: "Nothing here!";
 				color: white;
+				padding: 10px;
 			}
 
 			/* Individual achievement styling */
@@ -258,7 +260,7 @@
 			</div>
 			<button id="load_more" disabled>Load More</button>
 			<div id="footer">
-				<p>Last updated <span id="last_updated"></span></p>
+				<p>Last updated <span id="last_updated">N/A</span></p>
 				<p>
 					Viewing <span id="ach_count">0</span> of <span id="ach_total">0</span>
 					achievements
@@ -267,12 +269,23 @@
 			</div>
 		</div>
 		<script>
+			const Groupings = { DATE: "date", GAMES: "games" };
+
 			const mainEl = document.getElementById("main");
 			let prevX = 0;
 			let prevY = 0;
 			let pressedAchs = [];
 
-			// Sizing function
+			const groupingCheckbox = document.getElementById("grouping");
+			let grouping = groupingCheckbox.checked
+				? Groupings.GAMES
+				: Groupings.DATE;
+			groupingCheckbox.addEventListener("click", () => {
+				if (groupingCheckbox.checked) grouping = Groupings.GAMES;
+				else grouping = Groupings.DATE;
+			});
+
+			/** Resizes achievements based on screen size */
 			const achList = document.getElementById(`achievements`);
 			addEventListener("resize", clampSize);
 
@@ -283,7 +296,7 @@
 				achList.style.maxWidth = `${windowWidth - extraSpace - borderBuffer}px`;
 			}
 
-			// Populate
+			/** Populates with achievement data */
 			async function waitForAchData() {
 				const res = await fetch("achievements.json");
 				if (!res.ok) return undefined;
@@ -306,6 +319,7 @@
 			let count = 0;
 			achDataPromise.then((data) => {
 				if (!data) return;
+				if (grouping == Groupings.GAMES) return;
 				const lastUpdated = document.getElementById("last_updated");
 				const achCount = document.getElementById("ach_count");
 
@@ -392,6 +406,7 @@
 				clampSize();
 			});
 
+			/** Handles smoother mouse hover effects */
 			function getPositionAlongTheLine(x1, y1, x2, y2, percentage) {
 				return {
 					x: x1 * (1.0 - percentage) + x2 * percentage,
@@ -408,7 +423,6 @@
 				);
 			}
 
-			// Effects
 			window.onpointermove = function (event) {
 				const { clientX, clientY } = event;
 
@@ -474,6 +488,7 @@
 				return inBoxX && inBoxY;
 			}
 
+			/** Handles showing achievement tooltip when hovered over */
 			function selectAch(c, tooltip = false) {
 				c.classList.add("lifted");
 				const cImg = c.getElementsByTagName("img")[0];
