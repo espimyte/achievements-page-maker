@@ -336,16 +336,31 @@
 
 			const initialLoadCount = 300;
 			const loadIncrement = 200;
+			const achSize = 64;
+			const borderBuffer = 30;
 
 			/** Resizes achievements list based on screen size */
 			addEventListener("resize", clampSize);
 
 			function clampSize() {
 				const windowWidth = document.body.clientWidth;
-				const borderBuffer = 30;
-				const extraSpace = (windowWidth - borderBuffer) % 64;
+				const extraSpace = (windowWidth - borderBuffer) % achSize;
+
 				achLists.forEach((achList) => {
-					achList.style.maxWidth = `${Math.min(windowWidth - extraSpace - borderBuffer, achList.childElementCount * 64)}px`;
+					const achCount = achList.childElementCount;
+					let achsPerRow = (windowWidth - extraSpace - borderBuffer) / achSize;
+					let emptyCells =
+						achsPerRow >= achCount ? 0 : achsPerRow - (achCount % achsPerRow);
+					let rowCount = Math.ceil(achCount / achsPerRow);
+
+					while (emptyCells > rowCount) {
+						achsPerRow--;
+						emptyCells =
+							achsPerRow >= achCount ? 0 : achsPerRow - (achCount % achsPerRow);
+						rowCount = Math.ceil(achCount / achsPerRow);
+					}
+
+					achList.style.maxWidth = `${Math.min(windowWidth - extraSpace - borderBuffer, achCount * achSize, achsPerRow * achSize)}px`;
 				});
 			}
 
@@ -504,6 +519,7 @@
 				const loadNextGameAchs = () => {
 					const game = gamesInOrder[gameCount];
 					if (!game) return;
+
 					const achGroup = document.createElement("div");
 					achGroup.classList = "ach-group";
 					const achGroupTitle = document.createElement("h2");
@@ -512,6 +528,7 @@
 					achGroup.appendChild(achGroupTitle);
 
 					const achList = addAchList();
+					achList.classList.add(`list-${game}`);
 					gameAchs[game].forEach((ach) => {
 						const achEl = createAchEl(data, ach);
 						achList.appendChild(achEl);
