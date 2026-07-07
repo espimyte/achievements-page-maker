@@ -18,7 +18,7 @@
 				--ach-gradient-light: linear-gradient(
 					to bottom,
 					rgb(0, 13, 41),
-					rgba(0, 19, 44, 0.9)
+					rgba(0, 19, 44, 0.8)
 				);
 				--ach-gradient-alt: linear-gradient(
 					to bottom,
@@ -43,8 +43,13 @@
 			}
 
 			body {
-				background: url("bg.png");
-				background-position: center;
+				background: linear-gradient(
+					to bottom,
+					rgb(0, 139, 116),
+					rgb(0, 95, 139),
+					rgb(99, 0, 69),
+					rgb(255, 151, 92)
+				);
 				background-attachment: fixed;
 				image-rendering: pixelated;
 				overflow-y: scroll;
@@ -56,20 +61,35 @@
 				overflow-x: hidden;
 				display: flex;
 				flex-direction: column;
-				gap: 20px;
 			}
 
 			/* Header */
 			#header {
 				color: var(--ach-alt-primary);
+				margin: 0px 20px;
+				margin-top: 20px;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				position: relative;
+			}
+			#title {
 				background: var(--ach-gradient-light);
-				width: fit-content;
-				margin: 20px auto;
-				margin-bottom: 0px;
 				padding: 10px;
 				border: 1px solid var(--ach-tertiary);
 				letter-spacing: 2px;
 				font-size: 2.6em;
+				border-radius: 20px;
+				margin: 0;
+			}
+			#settings {
+				accent-color: white;
+				color: white;
+				width: 100%;
+				display: flex;
+				align-items: center;
+				justify-content: flex-end;
+				gap: 5px;
 			}
 
 			/* Achievements styling */
@@ -78,6 +98,8 @@
 				margin: auto;
 				display: flex;
 				align-items: center;
+				flex-direction: column;
+				gap: 5px;
 			}
 			#achievements {
 				display: flex;
@@ -85,10 +107,10 @@
 				justify-content: flex-start;
 				gap: 0px;
 				margin: 0px auto;
-				border: 15px solid rgb(0, 0, 0);
+				border: 15px solid rgba(0, 0, 0, 0.5);
 				height: fit-content;
 				max-width: calc(64px * 29);
-				background: rgba(0, 0, 0, 0.5);
+				background: rgba(110, 33, 33, 0.5);
 				backdrop-filter: blur(2px);
 			}
 			#achievements:empty:before {
@@ -177,7 +199,7 @@
 			/* Load more */
 			#load_more {
 				width: 200px;
-				margin: 0px auto;
+				margin: 20px auto;
 				background: var(--ach-gradient-alt);
 				color: var(--ach-alt-primary);
 				border-radius: 5px;
@@ -209,16 +231,29 @@
 			}
 
 			@media screen and (max-width: 600px) {
-				#footer .divider {
-					display: none;
+				#footer {
+					flex-direction: column;
+					gap: 5px;
+				}
+				#footer :last-child {
+					text-align: left;
+				}
+				#settings {
+					margin-top: 10px;
 				}
 			}
 		</style>
 	</head>
 	<body>
 		<div id="main">
-			<h1 id="header">ACHIEVEMENTS</h1>
+			<div id="header">
+				<h1 id="title">ACHIEVEMENTS</h1>
+			</div>
 			<div id="achievements_wrapper">
+				<div id="settings">
+					<input type="checkbox" id="grouping" name="grouping" />
+					<label for="grouping">Group by game</label>
+				</div>
 				<div id="achievements"></div>
 			</div>
 			<button id="load_more" disabled>Load More</button>
