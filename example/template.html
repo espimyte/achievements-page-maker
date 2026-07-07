@@ -6,6 +6,7 @@
 			content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=contain"
 			name="viewport"
 		/>
+		<link rel="icon" href="data:image/png;base64,iVBORw0KGgo=" />
 		<meta charset="utf-8" />
 		<title>Achievements</title>
 		<style>
@@ -102,7 +103,7 @@
 				flex-direction: column;
 				gap: 5px;
 			}
-			#achievements {
+			.ach-list {
 				display: flex;
 				flex-wrap: wrap;
 				justify-content: flex-start;
@@ -113,6 +114,11 @@
 				max-width: calc(64px * 29);
 				background: rgba(110, 33, 33, 0.5);
 				backdrop-filter: blur(2px);
+				margin-bottom: 20px;
+			}
+			.ach-group-title {
+				color: white;
+				margin: 20px 20px;
 			}
 			#achievements:empty:before {
 				content: "Nothing here!";
@@ -201,7 +207,8 @@
 			/* Load more */
 			#load_more {
 				width: 200px;
-				margin: 20px auto;
+				margin: 0px auto;
+				margin-bottom: 20px;
 				background: var(--ach-gradient-alt);
 				color: var(--ach-alt-primary);
 				border-radius: 5px;
@@ -272,35 +279,36 @@
 			const Groupings = { DATE: "date", GAMES: "games" };
 
 			const mainEl = document.getElementById("main");
+			const achievementsEl = document.getElementById("achievements");
+			const achCount = document.getElementById("ach_count");
+			const groupingCheckbox = document.getElementById("grouping");
+			const loadMoreButton = document.getElementById("load_more");
+			loadMoreButton.disabled = true;
+
+			const achLists = [];
+			let pressedAchs = [];
 			let prevX = 0;
 			let prevY = 0;
-			let pressedAchs = [];
 
-			const groupingCheckbox = document.getElementById("grouping");
-			let grouping = groupingCheckbox.checked
-				? Groupings.GAMES
-				: Groupings.DATE;
-			groupingCheckbox.addEventListener("click", () => {
-				if (groupingCheckbox.checked) grouping = Groupings.GAMES;
-				else grouping = Groupings.DATE;
-			});
+			const initialLoadCount = 300;
+			const loadIncrement = 200;
 
-			/** Resizes achievements based on screen size */
-			const achList = document.getElementById(`achievements`);
+			/** Resizes achievements list based on screen size */
 			addEventListener("resize", clampSize);
 
 			function clampSize() {
 				const windowWidth = document.body.clientWidth;
 				const borderBuffer = 30;
 				const extraSpace = (windowWidth - borderBuffer) % 64;
-				achList.style.maxWidth = `${windowWidth - extraSpace - borderBuffer}px`;
+				achLists.forEach((achList) => {
+					achList.style.maxWidth = `${windowWidth - extraSpace - borderBuffer}px`;
+				});
 			}
 
 			/** Populates with achievement data */
 			async function waitForAchData() {
 				const res = await fetch("achievements.json");
 				if (!res.ok) return undefined;
-
 				const data = await res.json();
 
 				// Sort achievements
@@ -312,20 +320,62 @@
 				return data;
 			}
 
+			function addAchList() {
+				const achList = document.createElement("div");
+				achList.classList.add("ach-list");
+				achLists.push(achList);
+				return achList;
+			}
+
+			function createAchEl(data, ach) {
+				const achEl = document.createElement("div");
+				achEl.className = `ach ${ach.game}`;
+
+				const gameData = data.games[ach.game];
+				if (!gameData) return;
+				const gameTitle = data.games[ach.game].title;
+
+				const hasInvalidDate = !ach.timestamp || ach.timestamp == 0;
+				const hasInvalidDesc = ach.desc.includes("NEW_ACHIEVEMENT");
+				const unlockDate = new Date(ach.timestamp * 1000).toLocaleDateString(
+					"en-US",
+				);
+
+				achEl.innerHTML = `
+					<img class="ach-img" src="${ach.img}" loading="lazy" />
+					<div class="ach-tooltip">
+						<div style="display: flex; gap: 5px">
+							<span class="ach-game">[${gameTitle}]</span><span class="ach-title">${ach.title}</span>
+							<span
+								class="ach-date"
+								style="flex-grow: 1;
+								text-align: right;">${hasInvalidDate ? "N/A" : unlockDate}</span>
+						</div>
+						<span class="ach-desc ${hasInvalidDesc ? "invalid" : ""}">${ach.desc}</span>
+					</div>
+				`;
+
+				achEl.onclick = (e) => {
+					if (achEl.classList.contains("lifted")) {
+						unselectAll();
+					} else {
+						unselectAll();
+						selectAch(achEl, true);
+					}
+				};
+				return achEl;
+			}
+
 			let achDataPromise = this.waitForAchData();
-			const initialLoadCount = 300;
-			const loadIncrement = 200;
 
-			let count = 0;
-			achDataPromise.then((data) => {
+			function initDate(data) {
+				achievementsEl.innerHTML = "";
+
+				let count = 0;
+
 				if (!data) return;
-				if (grouping == Groupings.GAMES) return;
-				const lastUpdated = document.getElementById("last_updated");
-				const achCount = document.getElementById("ach_count");
-
-				lastUpdated.textContent = new Date(
-					data.last_updated,
-				).toLocaleDateString("en-US");
+				const achList = addAchList();
+				achievementsEl.appendChild(achList);
 
 				const moreIndicator = document.createElement("div");
 				moreIndicator.id = "more_indicator";
@@ -334,44 +384,10 @@
 				function loadAchievements(start, end) {
 					end = Math.min(end, data.achievements.length);
 					for (i = start; i < end; i++) {
-						const ach = data.achievements[i];
-						const achEl = document.createElement("div");
-						achEl.className = `ach ${ach.game}`;
+						const achEl = createAchEl(data, data.achievements[i]);
 						achEl.id = `ach_${i}`;
-
-						const gameData = data.games[ach.game];
-						if (!gameData) continue;
-						const gameTitle = data.games[ach.game].title;
-
-						const hasInvalidDate = !ach.timestamp || ach.timestamp == 0;
-						const hasInvalidDesc = ach.desc.includes("NEW_ACHIEVEMENT");
-						const unlockDate = new Date(
-							ach.timestamp * 1000,
-						).toLocaleDateString("en-US");
-
-						achEl.innerHTML = `
-							<img class="ach-img" src="${ach.img}" loading="lazy" />
-							<div class="ach-tooltip">
-								<div style="display: flex; gap: 5px">
-									<span class="ach-game">[${gameTitle}]</span><span class="ach-title">${ach.title}</span>
-									<span
-										class="ach-date"
-										style="flex-grow: 1;
-										text-align: right;">${hasInvalidDate ? "N/A" : unlockDate}</span>
-								</div>
-								<span class="ach-desc ${hasInvalidDesc ? "invalid" : ""}">${ach.desc}</span>
-							</div>
-						`;
+						if (!achEl) continue;
 						achList.appendChild(achEl);
-
-						achEl.onclick = (e) => {
-							if (achEl.classList.contains("lifted")) {
-								unselectAll();
-							} else {
-								unselectAll();
-								selectAch(achEl, true);
-							}
-						};
 
 						if (i === end - 1) {
 							achList.appendChild(moreIndicator);
@@ -389,7 +405,6 @@
 				loadAchievements(0, initialLoadCount);
 
 				// Load more
-				const loadMoreButton = document.getElementById("load_more");
 				if (count < data.achievements.length) {
 					loadMoreButton.disabled = false;
 				}
@@ -400,10 +415,95 @@
 					}
 				};
 
-				// Achievement total
+				clampSize();
+			}
+
+			function initGroup(data) {
+				achievementsEl.innerHTML = "";
+				const gameAchs = {};
+				const gamesInOrder = [];
+
+				let currentGoal = initialLoadCount;
+				let count = 0;
+				let gameCount = 0;
+
+				data.achievements.forEach((ach) => {
+					if (!(ach.game in gameAchs)) {
+						gameAchs[ach.game] = [];
+						gamesInOrder.push(ach.game);
+					}
+					gameAchs[ach.game].push(ach);
+				});
+
+				const loadNextGameAchs = () => {
+					const game = gamesInOrder[gameCount];
+					if (!game) return;
+					const achGroup = document.createElement("div");
+					achGroup.classList = "ach-group";
+					const achGroupTitle = document.createElement("h2");
+					achGroupTitle.className = "ach-group-title";
+					achGroupTitle.textContent = data.games[game].title;
+					achGroup.appendChild(achGroupTitle);
+
+					const achList = addAchList();
+					gameAchs[game].forEach((ach) => {
+						const achEl = createAchEl(data, ach);
+						achList.appendChild(achEl);
+						count++;
+					});
+
+					achievementsEl.appendChild(achGroup);
+					achGroup.appendChild(achList);
+					gameCount++;
+					achCount.textContent = `${count}`;
+
+					if (count < currentGoal) loadNextGameAchs();
+					clampSize();
+					if (count < data.achievements.length) {
+						loadMoreButton.disabled = false;
+					} else loadMoreButton.disabled = true;
+				};
+
+				loadNextGameAchs();
+
+				// Load more
+				loadMoreButton.onclick = () => {
+					currentGoal = count + loadIncrement;
+					loadNextGameAchs();
+					if (count >= data.achievements.length) {
+						loadMoreButton.disabled = true;
+					}
+				};
+			}
+
+			achDataPromise.then((data) => {
+				let grouping = groupingCheckbox.checked
+					? Groupings.GAMES
+					: Groupings.DATE;
+				groupingCheckbox.addEventListener("click", () => {
+					if (groupingCheckbox.checked) grouping = Groupings.GAMES;
+					else grouping = Groupings.DATE;
+
+					if (grouping == Groupings.DATE) {
+						initDate(data);
+					} else if (grouping == Groupings.GAMES) {
+						initGroup(data);
+					}
+				});
+
+				if (grouping == Groupings.DATE) {
+					initDate(data);
+				} else if (grouping == Groupings.GAMES) {
+					initGroup(data);
+				}
+
+				const lastUpdated = document.getElementById("last_updated");
+				lastUpdated.textContent = new Date(
+					data.last_updated,
+				).toLocaleDateString("en-US");
+
 				const achTotal = document.getElementById("ach_total");
 				achTotal.textContent = `${data.achievements.length}`;
-				clampSize();
 			});
 
 			/** Handles smoother mouse hover effects */
@@ -454,23 +554,25 @@
 				const liftedAchs = [...pressedAchs];
 				unselectAll();
 
-				achList.childNodes.forEach((c) => {
-					if (c.id === "more_indicator") return;
-					var rect = c.getBoundingClientRect();
-					const offscreen = isOffscreen(rect);
-					if (offscreen) return;
+				achLists.forEach((achList) => {
+					achList.childNodes.forEach((c) => {
+						if (c.id === "more_indicator") return;
+						var rect = c.getBoundingClientRect();
+						const offscreen = isOffscreen(rect);
+						if (offscreen) return;
 
-					pointsToCheck.push({ x: event.clientX, y: event.clientY });
+						pointsToCheck.push({ x: event.clientX, y: event.clientY });
 
-					let lifted = false;
+						let lifted = false;
 
-					pointsToCheck.forEach((point) => {
-						if (lifted) return;
+						pointsToCheck.forEach((point) => {
+							if (lifted) return;
 
-						if (isPointInRect(point.x, point.y, rect)) {
-							selectAch(c);
-							lifted = true;
-						}
+							if (isPointInRect(point.x, point.y, rect)) {
+								selectAch(c);
+								lifted = true;
+							}
+						});
 					});
 				});
 
