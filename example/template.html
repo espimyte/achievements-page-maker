@@ -92,6 +92,9 @@
 				margin: 10px;
 				width: fit-content;
 				z-index: 10;
+				display: flex;
+				align-items: center;
+				gap: 5px;
 			}
 
 			/* Achievements styling */
@@ -289,7 +292,7 @@
 			const loadMoreButton = document.getElementById("load_more");
 			loadMoreButton.disabled = true;
 
-			const achLists = [];
+			let achLists = [];
 			let pressedAchs = [];
 			let prevX = 0;
 			let prevY = 0;
@@ -322,6 +325,12 @@
 				});
 
 				return data;
+			}
+
+			/* Clears achievements lists */
+			function clearAchievementsLists() {
+				achievementsEl.innerHTML = "";
+				achLists = [];
 			}
 
 			/** Add an achievement list */
@@ -376,7 +385,7 @@
 
 			/** Populate achievements sorted by date */
 			function initDate(data) {
-				achievementsEl.innerHTML = "";
+				clearAchievementsLists();
 
 				let count = 0;
 
@@ -427,7 +436,7 @@
 
 			/** Populate achievements grouped by game */
 			function initGroup(data) {
-				achievementsEl.innerHTML = "";
+				clearAchievementsLists();
 				const gameAchs = {};
 				const gamesInOrder = [];
 
