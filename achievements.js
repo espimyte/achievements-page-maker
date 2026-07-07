@@ -111,7 +111,10 @@ async function main() {
 
     // Populate games in achievements.json
     let json = fetchJSON(`${JSON_OUTPUT_PATH}`);
-    if (!json) json = {"games": {}, "achievements": []}
+    if (!json) {
+        console.log(`Unable to find ${path.resolve(JSON_OUTPUT_PATH)}. Creating new JSON file.`);
+        json = {"games": {}, "achievements": []}
+    }
     Object.values(gameDict).forEach((game) => {
         if (!json.games[game.key]) {
             json.games[game.key] = {title: game.title}
