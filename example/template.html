@@ -10,6 +10,11 @@
 		<meta charset="utf-8" />
 		<title>Achievements</title>
 		<style>
+			/** 
+			* Made with Espy's Achievement Collector 
+			* https://github.com/espimyte/achievements-collector
+			*/
+
 			@keyframes loading {
 				0% {
 					content: ".";
@@ -316,10 +321,18 @@
 					Viewing <span id="ach_count">0</span> of <span id="ach_total">0</span>
 					achievements
 				</p>
-				<p>Made with <a href="">Espy's Achievement Collector</a></p>
+				<p>
+					Made with
+					<a href="https://github.com/espimyte/achievements-collector"
+						>Espy's Achievement Collector</a
+					>
+				</p>
 			</div>
 		</div>
 		<script>
+			const jsonPath = "achievements.json";
+			const useRootPath = false;
+
 			const Groupings = { DATE: "date", GAMES: "games" };
 
 			const mainEl = document.getElementById("main");
@@ -366,7 +379,7 @@
 
 			/** Populates with achievement data */
 			async function waitForAchData() {
-				const res = await fetch("achievements.json");
+				const res = await fetch(jsonPath);
 				if (!res.ok) return undefined;
 				const data = await res.json();
 
@@ -415,7 +428,7 @@
 				const achImg = document.createElement("img");
 				achImg.loading = "lazy";
 				achImg.className = "ach-img";
-				achImg.src = ach.img;
+				achImg.src = `${useRootPath ? "/" : ""}${ach.img}`;
 				achEl.appendChild(achImg);
 
 				const achTooltip = document.createElement("div");
