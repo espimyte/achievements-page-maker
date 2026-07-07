@@ -67,8 +67,7 @@
 			/* Header */
 			#header {
 				color: var(--ach-alt-primary);
-				margin: 0px 20px;
-				margin-top: 20px;
+				margin: 20px 20px;
 				display: flex;
 				align-items: center;
 				justify-content: center;
@@ -91,6 +90,10 @@
 				align-items: center;
 				justify-content: flex-end;
 				gap: 5px;
+				position: absolute;
+				top: 0%;
+				right: 0%;
+				margin: 10px;
 			}
 
 			/* Achievements styling */
@@ -250,19 +253,22 @@
 				#settings {
 					margin-top: 10px;
 				}
+				#header {
+					margin-top: 40px;
+				}
 			}
 		</style>
 	</head>
 	<body>
 		<div id="main">
+			<div id="settings">
+				<input type="checkbox" id="grouping" name="grouping" />
+				<label for="grouping">Group by game</label>
+			</div>
 			<div id="header">
 				<h1 id="title">ACHIEVEMENTS</h1>
 			</div>
 			<div id="achievements_wrapper">
-				<div id="settings">
-					<input type="checkbox" id="grouping" name="grouping" />
-					<label for="grouping">Group by game</label>
-				</div>
 				<div id="achievements"></div>
 			</div>
 			<button id="load_more" disabled>Load More</button>
@@ -320,6 +326,7 @@
 				return data;
 			}
 
+			/** Add an achievement list */
 			function addAchList() {
 				const achList = document.createElement("div");
 				achList.classList.add("ach-list");
@@ -327,6 +334,7 @@
 				return achList;
 			}
 
+			/** Create an element to represent an achievement */
 			function createAchEl(data, ach) {
 				const achEl = document.createElement("div");
 				achEl.className = `ach ${ach.game}`;
@@ -368,6 +376,7 @@
 
 			let achDataPromise = this.waitForAchData();
 
+			/** Populate achievements sorted by date */
 			function initDate(data) {
 				achievementsEl.innerHTML = "";
 
@@ -418,6 +427,7 @@
 				clampSize();
 			}
 
+			/** Populate achievements grouped by game */
 			function initGroup(data) {
 				achievementsEl.innerHTML = "";
 				const gameAchs = {};
@@ -476,6 +486,7 @@
 				};
 			}
 
+			/** Populate achievements when achievement data loads */
 			achDataPromise.then((data) => {
 				let grouping = groupingCheckbox.checked
 					? Groupings.GAMES
