@@ -86,7 +86,7 @@ What each key means:
 | timestamp | UNIX timestamp of when the achievement was unlocked. You can generate one [here](https://www.unixtimestamp.com/). |
 | title | achievement title |
 | desc | achievement description |
-| img | image/icon associated with achievement |
+| img | path/url to image/icon associated with achievement |
 | src | the source of what added this achievement to the file. since you're doing this manually, you should write `manual` here | 3. You're done!
 
 ## Connecting achievement data to an HTML page
@@ -102,6 +102,7 @@ In the installation, there is an example folder, complete with a template HTML f
 3. Depending on your site configuration, you may need to edit the `jsonPath` variable in `template.html` to point to where `achievements.json` is stored on your site.
 4. Populate your achievement data to `achievements.json` if you haven't already (either manually or with `achievements.js`).
 5. You should see your achievements show up in `template.html` (or whatever you renamed it to)!
+6. And you're done! Feel free to customize it to your liking.
 
 A footer is provided in the template. Feel free to remove the credit in the footer if you wish.
 If images aren't loading due to incorrect image paths in `achievements.json`, try setting `RELATIVE_IMAGE_PATH` in `config.js`.
