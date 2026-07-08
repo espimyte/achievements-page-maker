@@ -42,20 +42,30 @@ export function writeJSON(file, data, sync = false) {
  * Fetches an image from a url and saves it
  * @param file filename to write to
  * @param url url to fetch data from 
+ * @returns image promise
  */
-export function saveImageFromURL(file, url) {                               
-    http.request(url, function(response) {                                        
-        var data = new stream.Transform();                                                    
+export function saveImageFromURL(file, url) {     
+    const promise = new Promise((resolve, reject) => {
+        try {
+            http.request(url, function(response) {                                        
+                var data = new stream.Transform();                                                    
 
-        response.on('data', function(chunk) {                                       
-            data.push(chunk);                                                         
-        });                                                                         
+                response.on('data', function(chunk) {                                       
+                    data.push(chunk);                                                         
+                });                                                                         
 
-        response.on('end', function() {                                             
-            fs.writeFileSync(file, data.read());        
-            // console.log(`\x1b[34mWrote \x1b[35m${url} \x1b[34mto \x1b[33m${file}\x1b[0m`)                   
-        });                                                            
-    }).end();
+                response.on('end', function() {                                             
+                    fs.writeFileSync(file, data.read());        
+                    // console.log(`\x1b[34mWrote \x1b[35m${url} \x1b[34mto \x1b[33m${file}\x1b[0m`)
+                    resolve(true)                   
+                });                                                            
+            }).end();
+        } catch (e) {
+            console.log(`\x1b[31m${e.name}\x1b[0m : ${e.message}`);
+            resolve(false);
+        }    
+    }) 
+    return promise;     
 }
 
 /**
@@ -64,7 +74,11 @@ export function saveImageFromURL(file, url) {
  * @returns the json from data from the url
  */
 export async function fetchJSONfromURL(url) {
-    const response = await fetch(url);
-    const data = await response.json();
-    return data;
+    try {
+        const response = await fetch(url);
+        const data = await response.json();
+        return data;
+    } catch (e) {
+        console.log(`\x1b[31m${e.name}\x1b[0m : ${e.message}`);
+    }
 }
