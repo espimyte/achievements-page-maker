@@ -15,6 +15,11 @@ async function isProfilePublic(userId) {
     const apiKey = process.env.STEAM_API_KEY
 
     const res = await fetchJSONfromURL(`http://api.steampowered.com/ISteamUserStats/GetPlayerAchievements/v0001/?appid=400&key=${apiKey}&steamid=${userId}`);
+    if (!res) {
+        console.error("\x1b[31mCould not retrieve profile data.\x1b[0m")
+        return false;
+    }
+
     return res.playerstats.error !== "Profile is not public";
 }
 
@@ -159,13 +164,18 @@ async function main() {
 
     // Last updated
     json.last_updated = Date.now();
-    writeJSON(`${JSON_OUTPUT_PATH}`, json);
+
+    // Write to JSON file
+    writeJSON(`${JSON_OUTPUT_PATH}`, json, true);
 
     // Save achievement icons of achieved achievements from schemas
     let saveIconStartTime = new Date();
     process.stdout.write("\x1b[33mSaving icons...\x1b[0m");
     let savedIconsCount = 0;
     let alreadyExistsCount = 0;
+
+    const savePromises = [];
+
     Object.values(schemas.response.games).forEach((data) => {
         data.achievements?.forEach((ach) => {
             if (!gameDict[data.appid]) return;
@@ -180,10 +190,14 @@ async function main() {
             if (!fs.existsSync(path.dirname(file))) {
                 fs.mkdirSync(path.dirname(file), {recursive: true})
             }
-            saveImageFromURL(file, imageUrl);
-            savedIconsCount++;
+            const savePromise = saveImageFromURL(file, imageUrl);
+            savePromises.push(savePromise);
+            savePromise.then(() => {
+                savedIconsCount++;
+            })
         })
     });
+    await Promise.all(savePromises);
     process.stdout.write(`\r\x1b[33mSaved ${savedIconsCount} icons, ${alreadyExistsCount} already exists. \x1b[0m(${(new Date() - saveIconStartTime) / 1000}s)\n`)
 }
 
