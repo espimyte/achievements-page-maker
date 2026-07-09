@@ -1,6 +1,6 @@
 /* 
  * Author: espimyte (espy.world) 
- * https://github.com/espimyte/achievements-collector
+ * https://github.com/espimyte/achievements-page-maker
  */
 
 const Groupings = { DATE: "date", GAMES: "games" };

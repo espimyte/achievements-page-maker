@@ -1,6 +1,6 @@
 /* 
  * Author: espimyte (espy.world) 
- * https://github.com/espimyte/achievements-collector
+ * https://github.com/espimyte/steam-achievements-exporter
  */
 
 import fs from 'fs'
@@ -9,7 +9,7 @@ import stream from 'node:stream';
 import path from 'path'
 import { fileURLToPath } from 'url';
 import { fetchJSON, writeJSON, saveImageFromURL, fetchJSONfromURL } from './utils.js'
-import { RELATIVE_IMAGE_PATH, FETCH_MODE, INCLUDE_IDS, EXCLUDE_IDS, ICONS_OUTPUT_FOLDER, JSON_OUTPUT_PATH, USE_DIRECT_LINKS } from './config.js'
+import { RELATIVE_IMAGE_PATH, FETCH_MODE, INCLUDE_IDS, EXCLUDE_IDS, ICONS_OUTPUT_FOLDER, JSON_OUTPUT_PATH, DOWNLOAD_ICONS } from './config.js'
 
 /** 
  * Returns whether or not the Steam profile is public
@@ -78,8 +78,8 @@ async function getUserData(userId) {
  * @param icon icon id of achievement (from schema)
  * @returns icon URL
  */
-function getIconURL(appId, icon) {
-    return `https://shared.fastly.steamstatic.com/community_assets/images/apps/${appId}/${icon}`;
+function getIconURL(appId, icon, https = false) {
+    return `${https ? "https" : "http"}://shared.fastly.steamstatic.com/community_assets/images/apps/${appId}/${icon}`;
 }
 
 async function main() {
@@ -166,14 +166,14 @@ async function main() {
             const gameKey = gameDict[data.appid]?.key;
             if (!gameKey) return;
             
-            const iconUrl = getIconURL(data.appid, ach.icon);
+            const iconUrl = getIconURL(data.appid, ach.icon, true);
 
             const achEntry = {};
             achEntry.game = gameKey;
             achEntry.timestamp = ach.unlockTime;
             achEntry.title = ach.name;
             achEntry.desc = ach.desc;
-            achEntry.img = USE_DIRECT_LINKS ? iconUrl : path.relative(RELATIVE_IMAGE_PATH, `${ICONS_OUTPUT_FOLDER}/${gameKey}/${ach.icon}`);
+            achEntry.img = !DOWNLOAD_ICONS ? iconUrl : path.relative(RELATIVE_IMAGE_PATH, `${ICONS_OUTPUT_FOLDER}/${gameKey}/${ach.icon}`);
             achEntry.src = 'steam';
             json.achievements.push(achEntry);
         })
@@ -185,7 +185,7 @@ async function main() {
     // Write to JSON file
     writeJSON(`${JSON_OUTPUT_PATH}`, json, true);
 
-    if (USE_DIRECT_LINKS) return;
+    if (!DOWNLOAD_ICONS) return;
 
     // Save achievement icons of achieved achievements from schemas
     let saveIconStartTime = new Date();
