@@ -2,7 +2,7 @@
 
 Script & template for gathering and displaying Steam (and non-Steam) achievements on your website!
 
-### [Download]()
+### [Download](https://github.com/espimyte/achievements-collector/releases/latest/download/achievements-collector.zip)
 
 ### [Live Example 1]() | [Live Example 2](https://espy.world/showcase/achievements)
 
