@@ -57,4 +57,4 @@ To use this template on your site, move everything inside the template folder an
 
 In the download, there is a 'scripts' folder, which will have an `steam-achievements.js` script.
 
-To learn how to use this script, see [here](/src/import_from_steam.md).
+To learn how to use this script, see [here](/dist/scripts/import_from_steam.md).
