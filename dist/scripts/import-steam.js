@@ -79,7 +79,7 @@ async function getUserData(userId) {
  * @returns icon URL
  */
 function getIconURL(appId, icon) {
-    return `http://shared.fastly.steamstatic.com/community_assets/images/apps/${appId}/${icon}`;
+    return `https://shared.fastly.steamstatic.com/community_assets/images/apps/${appId}/${icon}`;
 }
 
 async function main() {
