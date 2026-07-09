@@ -4,7 +4,7 @@ import stream from 'node:stream';
 import path from 'path'
 import { fileURLToPath } from 'url';
 import { fetchJSON, writeJSON, saveImageFromURL, fetchJSONfromURL } from './utils.js'
-import { RELATIVE_IMAGE_PATH, FETCH_MODE, INCLUDE_IDS, EXCLUDE_IDS, ICONS_OUTPUT_FOLDER, JSON_OUTPUT_PATH } from './config.js'
+import { RELATIVE_IMAGE_PATH, FETCH_MODE, INCLUDE_IDS, EXCLUDE_IDS, ICONS_OUTPUT_FOLDER, JSON_OUTPUT_PATH, USE_DIRECT_LINKS } from './config.js'
 
 /** 
  * Returns whether or not the Steam profile is public
@@ -65,6 +65,10 @@ async function getUserData(userId) {
 
     await Promise.all(promises);
     return {schemas: schemas, unlockTimes: unlockTimes}
+}
+
+function getIconURL(appId, icon) {
+    return `http://shared.fastly.steamstatic.com/community_assets/images/apps/${appId}/${icon}`;
 }
 
 async function main() {
@@ -150,13 +154,15 @@ async function main() {
         mergedAchData.forEach((ach, i) => {
             const gameKey = gameDict[data.appid]?.key;
             if (!gameKey) return;
+            
+            const iconUrl = getIconURL(data.appid, ach.icon);
 
             const achEntry = {};
             achEntry.game = gameKey;
             achEntry.timestamp = ach.unlockTime;
             achEntry.title = ach.name;
             achEntry.desc = ach.desc;
-            achEntry.img = path.relative(RELATIVE_IMAGE_PATH, `${ICONS_OUTPUT_FOLDER}/${gameKey}/${ach.icon}`);
+            achEntry.img = USE_DIRECT_LINKS ? iconUrl : path.relative(RELATIVE_IMAGE_PATH, `${ICONS_OUTPUT_FOLDER}/${gameKey}/${ach.icon}`);
             achEntry.src = 'steam';
             json.achievements.push(achEntry);
         })
@@ -167,6 +173,8 @@ async function main() {
 
     // Write to JSON file
     writeJSON(`${JSON_OUTPUT_PATH}`, json, true);
+
+    if (USE_DIRECT_LINKS) return;
 
     // Save achievement icons of achieved achievements from schemas
     let saveIconStartTime = new Date();
@@ -180,9 +188,9 @@ async function main() {
         data.achievements?.forEach((ach) => {
             if (!gameDict[data.appid]) return;
 
-            const imageUrl = `http://shared.fastly.steamstatic.com/community_assets/images/apps/${data.appid}/${ach.icon}`
-
+            const imageUrl = getIconURL(data.appid, ach.icon);
             const file = `${ICONS_OUTPUT_FOLDER}/${gameDict[data.appid].key}/${ach.icon}`;
+
             if (fs.existsSync(file)) {
                 alreadyExistsCount++;
                 return;
