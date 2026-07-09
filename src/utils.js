@@ -1,3 +1,7 @@
+/* 
+ * Author: espimyte (espy.world) 
+ */
+
 import fs from 'fs';
 import http from 'http';
 import stream from 'node:stream';

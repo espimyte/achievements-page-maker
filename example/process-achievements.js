@@ -1,3 +1,8 @@
+/* 
+ * Author: espimyte (espy.world) 
+ * https://github.com/espimyte/achievements-collector
+ */
+
 const Groupings = { DATE: "date", GAMES: "games" };
 
 const mainEl = document.getElementById("main");

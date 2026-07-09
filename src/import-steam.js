@@ -1,3 +1,8 @@
+/* 
+ * Author: espimyte (espy.world) 
+ * https://github.com/espimyte/achievements-collector
+ */
+
 import fs from 'fs'
 import http from 'http';
 import stream from 'node:stream';
