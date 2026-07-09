@@ -1,4 +1,4 @@
-# Achievements Collector
+# Achievements Page Maker
 
 Template for gathering and displaying achievements on your website!
 Comes with a script to import Steam achievements.
