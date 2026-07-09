@@ -17,7 +17,18 @@ let pressedAchs = [];
 let prevX = 0;
 let prevY = 0;
 
-const borderBuffer = 30;
+// Calculate border buffer (used for size clamping)
+function getBorderBuffer() {
+    const measureDiv = document.createElement("div");
+    measureDiv.className = "ach-list";
+    mainEl.appendChild(measureDiv)
+    const computedStyle = getComputedStyle(measureDiv);
+    const buffer = parseInt(computedStyle.borderLeftWidth) + parseInt(computedStyle.borderRightWidth);
+    measureDiv.remove();
+    return buffer;
+}
+
+const borderBuffer = getBorderBuffer();
 
 /** Resizes achievements list based on screen size */
 addEventListener("resize", clampSize);
