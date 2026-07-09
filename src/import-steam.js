@@ -72,6 +72,12 @@ async function getUserData(userId) {
     return {schemas: schemas, unlockTimes: unlockTimes}
 }
 
+/**
+ * Returns the icon URL of the given app id and icon id.
+ * @param appId app id of game
+ * @param icon icon id of achievement (from schema)
+ * @returns icon URL
+ */
 function getIconURL(appId, icon) {
     return `http://shared.fastly.steamstatic.com/community_assets/images/apps/${appId}/${icon}`;
 }
