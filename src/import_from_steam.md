@@ -44,3 +44,6 @@ Here's a table of every config variable:
 If you turned `DOWNLOAD_ICONS` in the config to true, it will also download the relevant achievement icons to the specified icons folder.
 
 6. And you're done! You can run the script again at any time to update it with your most recent Steam achievements.
+
+---
+From [Steam Achievements Exporter](https://github.com/espimyte/steam-achievements-exporter)
