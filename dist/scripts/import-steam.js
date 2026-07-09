@@ -1,10 +1,15 @@
+/* 
+ * Author: espimyte (espy.world) 
+ * https://github.com/espimyte/achievements-collector
+ */
+
 import fs from 'fs'
 import http from 'http';
 import stream from 'node:stream';
 import path from 'path'
 import { fileURLToPath } from 'url';
 import { fetchJSON, writeJSON, saveImageFromURL, fetchJSONfromURL } from './utils.js'
-import { RELATIVE_IMAGE_PATH, FETCH_MODE, INCLUDE_IDS, EXCLUDE_IDS, ICONS_OUTPUT_FOLDER, JSON_OUTPUT_PATH } from './config.js'
+import { RELATIVE_IMAGE_PATH, FETCH_MODE, INCLUDE_IDS, EXCLUDE_IDS, ICONS_OUTPUT_FOLDER, JSON_OUTPUT_PATH, USE_DIRECT_LINKS } from './config.js'
 
 /** 
  * Returns whether or not the Steam profile is public
@@ -15,6 +20,11 @@ async function isProfilePublic(userId) {
     const apiKey = process.env.STEAM_API_KEY
 
     const res = await fetchJSONfromURL(`http://api.steampowered.com/ISteamUserStats/GetPlayerAchievements/v0001/?appid=400&key=${apiKey}&steamid=${userId}`);
+    if (!res) {
+        console.error("\x1b[31mCould not retrieve profile data.\x1b[0m")
+        return false;
+    }
+
     return res.playerstats.error !== "Profile is not public";
 }
 
@@ -60,6 +70,16 @@ async function getUserData(userId) {
 
     await Promise.all(promises);
     return {schemas: schemas, unlockTimes: unlockTimes}
+}
+
+/**
+ * Returns the icon URL of the given app id and icon id.
+ * @param appId app id of game
+ * @param icon icon id of achievement (from schema)
+ * @returns icon URL
+ */
+function getIconURL(appId, icon) {
+    return `http://shared.fastly.steamstatic.com/community_assets/images/apps/${appId}/${icon}`;
 }
 
 async function main() {
@@ -145,13 +165,15 @@ async function main() {
         mergedAchData.forEach((ach, i) => {
             const gameKey = gameDict[data.appid]?.key;
             if (!gameKey) return;
+            
+            const iconUrl = getIconURL(data.appid, ach.icon);
 
             const achEntry = {};
             achEntry.game = gameKey;
             achEntry.timestamp = ach.unlockTime;
             achEntry.title = ach.name;
             achEntry.desc = ach.desc;
-            achEntry.img = path.relative(RELATIVE_IMAGE_PATH, `${ICONS_OUTPUT_FOLDER}/${gameKey}/${ach.icon}`);
+            achEntry.img = USE_DIRECT_LINKS ? iconUrl : path.relative(RELATIVE_IMAGE_PATH, `${ICONS_OUTPUT_FOLDER}/${gameKey}/${ach.icon}`);
             achEntry.src = 'steam';
             json.achievements.push(achEntry);
         })
@@ -159,20 +181,27 @@ async function main() {
 
     // Last updated
     json.last_updated = Date.now();
-    writeJSON(`${JSON_OUTPUT_PATH}`, json);
+
+    // Write to JSON file
+    writeJSON(`${JSON_OUTPUT_PATH}`, json, true);
+
+    if (USE_DIRECT_LINKS) return;
 
     // Save achievement icons of achieved achievements from schemas
     let saveIconStartTime = new Date();
     process.stdout.write("\x1b[33mSaving icons...\x1b[0m");
     let savedIconsCount = 0;
     let alreadyExistsCount = 0;
+
+    const savePromises = [];
+
     Object.values(schemas.response.games).forEach((data) => {
         data.achievements?.forEach((ach) => {
             if (!gameDict[data.appid]) return;
 
-            const imageUrl = `http://shared.fastly.steamstatic.com/community_assets/images/apps/${data.appid}/${ach.icon}`
-
+            const imageUrl = getIconURL(data.appid, ach.icon);
             const file = `${ICONS_OUTPUT_FOLDER}/${gameDict[data.appid].key}/${ach.icon}`;
+
             if (fs.existsSync(file)) {
                 alreadyExistsCount++;
                 return;
@@ -180,10 +209,14 @@ async function main() {
             if (!fs.existsSync(path.dirname(file))) {
                 fs.mkdirSync(path.dirname(file), {recursive: true})
             }
-            saveImageFromURL(file, imageUrl);
-            savedIconsCount++;
+            const savePromise = saveImageFromURL(file, imageUrl);
+            savePromises.push(savePromise);
+            savePromise.then(() => {
+                savedIconsCount++;
+            })
         })
     });
+    await Promise.all(savePromises);
     process.stdout.write(`\r\x1b[33mSaved ${savedIconsCount} icons, ${alreadyExistsCount} already exists. \x1b[0m(${(new Date() - saveIconStartTime) / 1000}s)\n`)
 }
 

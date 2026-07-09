@@ -1,3 +1,8 @@
+/* 
+ * Author: espimyte (espy.world) 
+ * https://github.com/espimyte/achievements-collector
+ */
+
 const Groupings = { DATE: "date", GAMES: "games" };
 
 const mainEl = document.getElementById("main");
@@ -12,10 +17,18 @@ let pressedAchs = [];
 let prevX = 0;
 let prevY = 0;
 
-const initialLoadCount = 300;
-const loadIncrement = 200;
-const achSize = 64;
-const borderBuffer = 30;
+// Calculate border buffer (used for size clamping)
+function getBorderBuffer() {
+    const measureDiv = document.createElement("div");
+    measureDiv.className = "ach-list";
+    mainEl.appendChild(measureDiv)
+    const computedStyle = getComputedStyle(measureDiv);
+    const buffer = parseInt(computedStyle.borderLeftWidth) + parseInt(computedStyle.borderRightWidth);
+    measureDiv.remove();
+    return buffer;
+}
+
+const borderBuffer = getBorderBuffer();
 
 /** Resizes achievements list based on screen size */
 addEventListener("resize", clampSize);
@@ -75,6 +88,8 @@ function addAchList() {
 function createAchEl(data, ach) {
     const achEl = document.createElement("div");
     achEl.className = `ach ${ach.game}`;
+    achEl.style.width = `${achSize}px`;
+    achEl.style.height = `${achSize}px`;
 
     const gameData = data.games[ach.game];
     if (!gameData) return;
@@ -94,6 +109,8 @@ function createAchEl(data, ach) {
     achImg.loading = "lazy";
     achImg.className = "ach-img";
     achImg.src = `${useRootPath ? "/" : ""}${ach.img}`;
+    achImg.style.width = `${achSize}px`;
+    achImg.style.height = `${achSize}px`;
     achEl.appendChild(achImg);
 
     const achTooltip = document.createElement("div");
@@ -138,6 +155,8 @@ function initDate(data) {
 
     const moreIndicator = document.createElement("div");
     moreIndicator.id = "more_indicator";
+    moreIndicator.style.width = `${achSize}px`;
+    moreIndicator.style.height = `${achSize}px`;
     achList.appendChild(moreIndicator);
 
     function loadAchievements(start, end) {
@@ -296,7 +315,7 @@ window.onpointermove = function (event) {
     const diff = ((diffX ^ 2) + (diffY ^ 2)) ^ (1 / 2);
 
     // Steps needed
-    const stepSize = 64;
+    const stepSize = achSize;
     const stepsNeeded = Math.floor(diff / stepSize);
     const percent = 1 / stepsNeeded;
 
@@ -350,8 +369,8 @@ window.onpointermove = function (event) {
 };
 
 function isPointInRect(x, y, rect) {
-    const inBoxX = x > rect.left && x - rect.left <= 64;
-    const inBoxY = y > rect.top && y - rect.top <= 64;
+    const inBoxX = x > rect.left && x - rect.left <= achSize;
+    const inBoxY = y > rect.top && y - rect.top <= achSize;
     return inBoxX && inBoxY;
 }
 
@@ -393,6 +412,8 @@ function unselectAll() {
     pressedAchs.forEach((ach) => {
         ach.parent.classList.remove("lifted");
         ach.img.style = ``;
+        ach.img.style.width = `${achSize}px`
+        ach.img.style.height = `${achSize}px`
         ach.img.style.transition = `transform 0.5s`;
         ach.tooltip.style = "";
     });

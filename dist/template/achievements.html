@@ -1,8 +1,5 @@
 <!doctype html>
 
-<!-- Made with Espy's Achievement Collector 
-(https://github.com/espimyte/achievements-collector) -->
-
 <html lang="en">
 	<head>
 		<meta
@@ -48,8 +45,11 @@
 			</div>
 		</div>
 		<script>
-			const jsonPath = "achievements.json";
-			const useRootPath = false;
+			const jsonPath = "achievements.json"; // Path to achievements JSON file
+			const useRootPath = false; // If using relative image paths, whether or not to start from the root folder
+			const initialLoadCount = 300; // How many achievements to load initially
+			const loadIncrement = 200; // How many achievements to load after pressing 'load more'
+			const achSize = 64; // Size of achievement icons, in pixels
 		</script>
 		<script src="process-achievements.js"></script>
 	</body>
