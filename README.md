@@ -3,10 +3,13 @@
 Script & template for gathering and displaying Steam (and non-Steam) achievements on your website!
 
 ### [Download]()
+
 ### [Live Example 1]() | [Live Example 2](https://espy.world/showcase/achievements)
 
 ## How to Use
+
 ### The Template
+
 When you download and unzip the file, there will be two folders: "template" and "scripts".
 
 The template folder has the html page already set up for you, with some example achievements! Feel free to play around with it. You're free to customize this template however you like.
@@ -14,6 +17,7 @@ The template folder has the html page already set up for you, with some example 
 To use this template on your site, move everything inside the template folder anywhere on your site.
 
 ### Adding achievements (manually)
+
 1. Define a game under in the `achievements.json` file for your achievement. If the game is already defined, you can skip this step. Example below.
 
 ```json
@@ -36,18 +40,20 @@ To use this template on your site, move everything inside the template folder an
   },
 ]
 ```
-| Key | Value |
-| ------------- | ------------- |
-| game | the associated game id you defined earlier |
-| timestamp | UNIX timestamp of when the achievement was unlocked. You can generate one [here](https://www.unixtimestamp.com/). |
-| title | achievement title |
-| desc | achievement description |
-| img | path/url to image/icon associated with achievement |
-| src | the source of what added this achievement to the file. since you're doing this manually, you should write `manual` here | 
+
+| Key       | Value                                                                                                                   |
+| --------- | ----------------------------------------------------------------------------------------------------------------------- |
+| game      | the associated game id you defined earlier                                                                              |
+| timestamp | UNIX timestamp of when the achievement was unlocked. You can generate one [here](https://www.unixtimestamp.com/).       |
+| title     | achievement title                                                                                                       |
+| desc      | achievement description                                                                                                 |
+| img       | path/url to image/icon associated with achievement                                                                      |
+| src       | the source of what added this achievement to the file. since you're doing this manually, you should write `manual` here |
 
 3. Your achievements should show up in the template. Hooray!
 
 ## Getting achievement data from Steam
+
 In the download, there is a 'scripts' folder, which will have an `import-steam.js` script.
 
 In order to use this script, you will need the following prerequisites:
@@ -60,6 +66,7 @@ In order to use this script, you will need the following prerequisites:
 **A Steam account**
 
 **Steam User ID**
+
 - To get your Steam User ID, while logged into your account, visit this page: https://store.steampowered.com/account/
 - Your Steam ID should be displayed near your name on that page.
 
@@ -83,15 +90,14 @@ Here's a table of every config variable:
 | EXCLUDE_IDS | If using `exclude` fetch mode, excludes app ids defined here from being fetched. |
 | INCLUDE_IDS | If using `include` fetch mode, gets achievements from the app ids listed here. |
 
-
 2. Create a `.env` file in the same area as the script.
 3. Populate the `.env` file with your steam User ID and your Steam API key. You can copy the contents of the `.env.example` file and replace the sample values.
 
 > [!WARNING]
->  Take care to never share/publish the contents of this file anywhere, as your API key is sensitive data.
+> Take care to never share/publish the contents of this file anywhere, as your API key is sensitive data.
 
 4. Make sure your account game details are set to public (you can set it back to private when you're done). If you're having trouble, see this [image](/images/game_details.png) for what settings need to be public.
-5. Run `node import-steam.js` in your command line. This will create an `achievements.json` file (or modify it if it already exists) at the location specified in `config.js`.
+5. Run `node scripts/import-steam.js` in your command line. This will create an `achievements.json` file (or modify it if it already exists) at the location specified in `config.js`.
 
 If you turned `USE_DIRECT_LINKS` in the config to false, it will also download the relevant achievement icons to the specified icons folder.
 
