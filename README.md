@@ -55,6 +55,6 @@ To use this template on your site, move everything inside the template folder an
 
 ## Importing achievement data from Steam
 
-In the download, there is a 'scripts' folder, which will have an `export-steam.js` script.
+In the download, there is a 'scripts' folder, which will have an `steam-achievements.js` script.
 
 To learn how to use this script, see [here](/src/import_from_steam.md).
